@@ -13,7 +13,7 @@ path = "src/main.rs"
 [dependencies]
 clap = { version = "4.4", features = ["derive"] }
 dialoguer = "0.10"
-colored = "2.0"
+colored = "3.0"
 hex = "0.4.3"
 indicatif = "0.17"
 serde = { version = "1.0", features = ["derive"] }
