@@ -27,7 +27,7 @@ axum = { version = "0.7", features = ["macros"] }
 dotenv = "0.15"
 anyhow = "1.0"
 zeroize = "1.3"  # Secure memory wiping for sensitive data
-base64 = "0.21"
+base64 = "0.22"
 aws-nitro-enclaves-nsm-api = "0.4"
 coset = "0.3"
 chrono = "0.4"
