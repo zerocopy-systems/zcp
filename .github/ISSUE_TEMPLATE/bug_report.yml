@@ -6,7 +6,7 @@ body:
     attributes:
       value: |
         Thanks for taking the time to report a bug!
-        
+
   - type: textarea
     id: description
     attributes:
@@ -15,7 +15,7 @@ body:
       placeholder: When I run `zcp audit`, it crashes with...
     validations:
       required: true
-      
+
   - type: textarea
     id: reproduction
     attributes:
@@ -27,7 +27,7 @@ body:
         3. See error
     validations:
       required: true
-      
+
   - type: textarea
     id: expected
     attributes:
@@ -35,7 +35,7 @@ body:
       description: What you expected to happen
     validations:
       required: true
-      
+
   - type: input
     id: version
     attributes:
@@ -44,7 +44,7 @@ body:
       placeholder: "zcp 0.1.0"
     validations:
       required: true
-      
+
   - type: dropdown
     id: os
     attributes:
@@ -57,7 +57,7 @@ body:
         - Windows
     validations:
       required: true
-      
+
   - type: textarea
     id: logs
     attributes:

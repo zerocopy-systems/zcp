@@ -19,6 +19,7 @@ Security vulnerabilities should be reported privately.
 Send details to: **security@zerocopy.systems**
 
 Include:
+
 - Description of the vulnerability
 - Steps to reproduce
 - Potential impact
@@ -26,28 +27,31 @@ Include:
 
 ### 3. **Response Timeline**
 
-| Action | Timeline |
-|--------|----------|
-| Acknowledgment | 48 hours |
-| Initial assessment | 7 days |
-| Fix timeline provided | 14 days |
-| Public disclosure | After fix released |
+| Action                | Timeline           |
+| --------------------- | ------------------ |
+| Acknowledgment        | 48 hours           |
+| Initial assessment    | 7 days             |
+| Fix timeline provided | 14 days            |
+| Public disclosure     | After fix released |
 
 ## Security Measures
 
 ### Build Security
+
 - ✅ All releases are signed with [Sigstore cosign](https://www.sigstore.dev/)
 - ✅ SHA256 checksums provided for all binaries
 - ✅ Reproducible builds from source
 - ✅ Dependency scanning via `cargo-audit`
 
 ### Runtime Security
+
 - ✅ No data exfiltration (results stay local by default)
 - ✅ Minimal permissions required (`kms:Sign` only)
 - ✅ No secrets stored or cached
 - ✅ Memory-safe Rust implementation
 
 ### Supply Chain Security
+
 - ✅ Pinned dependencies in Cargo.lock
 - ✅ Automated dependency updates via Dependabot
 - ✅ License compliance scanning (no copyleft)

@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::fmt::Write as FmtWrite;
 use std::fs::File;
+use std::io::IsTerminal;
 use std::io::Write;
 use std::sync::Arc;
 use zero_copy_utils::kernel::{self, AuditResult};
@@ -107,6 +108,10 @@ struct Args {
     /// Controls the volatility multiplier (High = 5x BIS)
     #[arg(long, value_enum, default_value_t = MarketRegime::Medium)]
     regime: MarketRegime,
+
+    /// Timeout in seconds for network requests (default: 10)
+    #[arg(long, default_value = "10")]
+    timeout: u64,
 
     #[command(subcommand)]
     command: Option<Command>,
@@ -386,10 +391,15 @@ pub struct PerfReport {
     pub binary_hash: String,
 }
 
-fn print_result(result: &AuditResult, quiet: bool) {
-    if quiet {
+fn print_result(result: &AuditResult, quiet: bool, json: bool) {
+    if quiet || json {
         return;
     }
+    // Note: We check args.json in main() and suppress this whole loop if true.
+    // However, if we ever call print_result individually, we should handle it.
+    // We added `json` parameter to enforce this.
+
+    // For now, assume this is only called in non-JSON mode based on main logic.
     if result.passed {
         println!("[{}] {}", "PASS".green().bold(), result.check_name);
     } else {
@@ -436,7 +446,7 @@ async fn publish_to_chain(
     let hash_bytes: [u8; 32] = hex::decode(content_hash_hex).ok()?.try_into().ok()?;
 
     // 5. Send Transaction
-    let pb = if !quiet && !json {
+    let pb = if !quiet && !json && std::io::stdout().is_terminal() {
         use indicatif::{ProgressBar, ProgressStyle};
         let pb = ProgressBar::new_spinner();
         pb.set_style(
@@ -532,7 +542,7 @@ async fn submit_audit(
         });
 
     // Consent Prompt
-    if !args.quiet {
+    if !args.quiet && !args.json {
         println!();
         println!("{}", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".cyan());
         println!("{}", "  ANONYMOUS BENCHMARK SUBMISSION".cyan().bold());
@@ -617,7 +627,7 @@ async fn submit_audit(
 
     // Attempt submission (with retry)
     let client = match reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(10))
+        .timeout(std::time::Duration::from_secs(args.timeout))
         .build()
     {
         Ok(c) => c,
@@ -1128,6 +1138,8 @@ async fn run() -> Result<i32> {
         );
         println!("{}", "=========================================".bold());
 
+        println!("{}", "Docs: https://docs.zerocopy.systems".blue());
+        println!();
         if args.sim {
             println!(
                 "{}",
@@ -1155,7 +1167,7 @@ async fn run() -> Result<i32> {
                     if !res.passed {
                         all_passed = false;
                     }
-                    print_result(&res, args.quiet);
+                    print_result(&res, args.quiet, args.json);
                     writeln!(
                         &mut report_buffer,
                         "[{}] {} - {}",
@@ -1416,12 +1428,49 @@ async fn run() -> Result<i32> {
         }
     }
 
+    // P0: Update Check (Background / Non-blocking)
+    if !args.quiet && !args.json {
+        check_for_updates().await;
+    }
+
     if error_occurred {
         Ok(2)
     } else if all_passed {
         Ok(0)
     } else {
         Ok(1)
+    }
+}
+
+async fn check_for_updates() {
+    // Current version
+    let current_version = env!("CARGO_PKG_VERSION");
+
+    // In production, fetch from GitHub Releases or API
+    // For now, we simulate a check or check a known endpoint
+    // We use a short timeout to not block CLI exit significantly
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_millis(500))
+        .user_agent("zcp-cli")
+        .build()
+        .unwrap_or_default();
+
+    // Mock endpoint or real one. For Audit, we can check a public text file or GH API.
+    // Using a dummy URL for safety, but wrapping in catch.
+    let url = "https://api.github.com/repos/zero-copy-systems/zcp/releases/latest";
+
+    // We swallow errors to be non-intrusive
+    if let Ok(resp) = client.get(url).send().await {
+        if let Ok(json) = resp.json::<serde_json::Value>().await {
+            if let Some(tag_name) = json["tag_name"].as_str() {
+                let latest_version = tag_name.trim_start_matches('v');
+                if latest_version != current_version {
+                    println!("\n{}", "📦 Update available!".yellow().bold());
+                    println!("   v{} -> v{}", current_version, latest_version);
+                    println!("   Run {} to update.\n", "curl -L zerocopy.sh | sh".cyan());
+                }
+            }
+        }
     }
 }
 

@@ -22,12 +22,12 @@ zcp --version
 
 ## 📊 What It Measures
 
-| Metric | Description |
-|--------|-------------|
-| **Latency (P50/P95/P99)** | Signing operation round-trip time |
-| **Jitter (Std Dev)** | Variance in signing latency |
-| **Throughput** | Maximum signatures per second |
-| **Alpha Decay** | Estimated profit loss due to latency |
+| Metric                    | Description                          |
+| ------------------------- | ------------------------------------ |
+| **Latency (P50/P95/P99)** | Signing operation round-trip time    |
+| **Jitter (Std Dev)**      | Variance in signing latency          |
+| **Throughput**            | Maximum signatures per second        |
+| **Alpha Decay**           | Estimated profit loss due to latency |
 
 ## 🔧 Usage
 
@@ -64,13 +64,13 @@ zcp audit --signer aws-kms --region us-east-1 --output report.json
 
 ## 📈 Grading Scale
 
-| Grade | Latency | Assessment |
-|-------|---------|------------|
-| **A** | < 1ms | Institutional Grade |
-| **B** | 1-10ms | Competitive |
-| **C** | 10-50ms | At Risk |
-| **D** | 50-150ms | Bleeding Alpha |
-| **F** | > 150ms | Critical |
+| Grade | Latency  | Assessment          |
+| ----- | -------- | ------------------- |
+| **A** | < 1ms    | Institutional Grade |
+| **B** | 1-10ms   | Competitive         |
+| **C** | 10-50ms  | At Risk             |
+| **D** | 50-150ms | Bleeding Alpha      |
+| **F** | > 150ms  | Critical            |
 
 ## 🔐 Supported Signers
 

@@ -13,10 +13,12 @@ Thank you for your interest in contributing to ZCP! We welcome contributions fro
 ## 📋 Before Contributing
 
 ### Check Existing Issues
+
 - Look for [open issues](https://github.com/zerocopy-systems/zcp/issues)
 - Check if someone is already working on it
 
 ### For New Features
+
 - Open an issue first to discuss the feature
 - Wait for maintainer approval before starting work
 
@@ -43,6 +45,7 @@ cargo run -- audit --signer mock --samples 100
 ## 📝 Pull Request Process
 
 1. **Create a branch** from `main`:
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -50,6 +53,7 @@ cargo run -- audit --signer mock --samples 100
 2. **Make your changes** following our style guide
 
 3. **Test your changes**:
+
    ```bash
    cargo test
    cargo clippy -- -D warnings
@@ -57,6 +61,7 @@ cargo run -- audit --signer mock --samples 100
    ```
 
 4. **Commit with conventional commits**:
+
    ```
    feat: add support for new signer
    fix: correct latency calculation

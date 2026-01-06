@@ -6,7 +6,7 @@ body:
     attributes:
       value: |
         Thanks for suggesting a feature!
-        
+
   - type: textarea
     id: problem
     attributes:
@@ -15,7 +15,7 @@ body:
       placeholder: I'm frustrated when...
     validations:
       required: true
-      
+
   - type: textarea
     id: solution
     attributes:
@@ -23,13 +23,13 @@ body:
       description: How would you like it to work?
     validations:
       required: true
-      
+
   - type: textarea
     id: alternatives
     attributes:
       label: Alternatives Considered
       description: Any workarounds you've tried?
-      
+
   - type: dropdown
     id: signer
     attributes:
