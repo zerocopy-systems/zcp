@@ -1729,10 +1729,12 @@ mod tests {
 
         // Ground Truth captured from correct implementation:
         // x = 12345 (seed) -> ... -> 13289605635609
-        
-        assert_eq!(v1, 13289605635609, "PRNG Sequence Mismatch! Logic may be mutated.");
-    }
 
+        assert_eq!(
+            v1, 13289605635609,
+            "PRNG Sequence Mismatch! Logic may be mutated."
+        );
+    }
 
     #[test]
     fn test_xorshift64_range() {
@@ -1741,7 +1743,7 @@ mod tests {
             let r = rng.range(10, 20);
             assert!(r >= 10 && r < 20, "Range calculation logic violated!");
         }
-        
+
         // Edge case: min == max from mutation finding (cmp operators)
         assert_eq!(rng.range(50, 50), 50);
         // Edge case: min > max (should act sane or return min based on impl)
