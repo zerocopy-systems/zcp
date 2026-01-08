@@ -7,6 +7,7 @@
 //! - Consistent --json support
 
 use colored::*;
+use indicatif::{ProgressBar, ProgressStyle};
 
 /// Print the branded ZeroCopy header
 pub fn print_header(title: &str) {
@@ -118,6 +119,20 @@ pub fn print_warning(message: &str) {
 #[allow(dead_code)]
 pub fn print_info(message: &str) {
     println!("{} {}", "ℹ".blue(), message);
+}
+
+/// Create and return a new spinner
+#[allow(dead_code)]
+pub fn create_spinner(message: &str) -> ProgressBar {
+    let spinner = ProgressBar::new_spinner();
+    spinner.set_style(
+        ProgressStyle::default_spinner()
+            .template("{spinner:.green} {msg}")
+            .unwrap(),
+    );
+    spinner.set_message(message.to_string());
+    spinner.enable_steady_tick(std::time::Duration::from_millis(100));
+    spinner
 }
 
 /// Print a step in progress

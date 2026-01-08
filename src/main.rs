@@ -13,8 +13,13 @@ use std::sync::Arc;
 use zero_copy_utils::kernel::{self, AuditResult};
 use zeroize::Zeroize;
 
+mod capability;
 mod commands;
+mod jitter_tax;
+mod pdf_report;
+mod rich_output;
 mod ui;
+mod wallet;
 
 // Generate type-safe bindings for the Smart Contract
 abigen!(
@@ -25,9 +30,35 @@ abigen!(
 );
 
 /// ZeroCopy Systems - Revenue Leakage Detector
+///
+/// Analyze your trading infrastructure to quantify the "Jitter Tax" -
+/// the annual revenue lost due to signing latency.
 #[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-#[command(name = "zerocopy-audit")]
+#[command(
+    name = "zcp",
+    author = "ZeroCopy Systems <engineering@zerocopy.systems>",
+    version,
+    about = "Revenue Leakage Detector - Quantify your Jitter Tax",
+    long_about = r#"
+ZCP AUDIT - Revenue Leakage Detector
+
+Analyze your trading infrastructure to quantify the "Jitter Tax" -
+the annual revenue lost due to signing latency.
+
+QUICK START:
+  zcp audit --volume 10000000           # $10M daily volume
+  zcp audit --volume 10000000 --explain # Show calculation breakdown
+
+EXAMPLES:
+  zcp audit --sim                       # Simulation mode (no network)
+  zcp audit --provider aws-kms          # Specify AWS KMS latency (150ms)
+  zcp audit --provider mpc              # Specify Fireblocks/MPC latency (350ms)
+  zcp audit --volume 50000000 --json    # JSON output for automation
+
+Learn more: https://docs.zerocopy.systems
+"#,
+    after_help = "Visit https://zerocopy.systems for documentation and support."
+)]
 struct Args {
     /// Enable verbose output with detailed explanations
     #[arg(short, long)]
@@ -53,10 +84,33 @@ struct Args {
     #[arg(short, long)]
     quiet: bool,
 
+    /// Accept capability declaration without interactive prompt
+    #[arg(long)]
+    accept: bool,
+
+    /// Wallet address(es) to audit (EVM 0x... or Solana base58)
+    /// Can be specified multiple times: --address 0x... --address 7cT...
+    #[arg(long, value_name = "ADDR")]
+    address: Vec<String>,
+
     /// Daily trading volume in USD (for loss calculation)
     /// Example: --volume 10000000 (for $10M daily volume)
     #[arg(long, value_name = "USD")]
     volume: Option<u64>,
+
+    /// Signing provider for Jitter Tax calculation (aws-kms, mpc, hsm, custom)
+    /// If not specified, will prompt interactively
+    #[arg(long, value_name = "PROVIDER")]
+    provider: Option<String>,
+
+    /// Show detailed calculation breakdown with sources
+    #[arg(long)]
+    explain: bool,
+
+    /// Generate a Markdown report file (can be converted to PDF)
+    /// Example: --report jitter_audit.md
+    #[arg(long, value_name = "FILE")]
+    report: Option<String>,
 
     /// Run as a background daemon (Continuous Audit)
     #[arg(long)]
@@ -1128,18 +1182,9 @@ async fn run() -> Result<i32> {
     };
 
     if !args.json && !args.quiet {
-        println!("{}", "=========================================".bold());
-        println!(
-            "{}",
-            "   ZEROCOPY SYSTEMS // REVENUE LEAKAGE DETECTOR   "
-                .bold()
-                .on_black()
-                .white()
-        );
-        println!("{}", "=========================================".bold());
+        // Print ASCII logo (Task 5.1)
+        rich_output::print_logo(args.quiet);
 
-        println!("{}", "Docs: https://docs.zerocopy.systems".blue());
-        println!();
         if args.sim {
             println!(
                 "{}",
@@ -1147,8 +1192,44 @@ async fn run() -> Result<i32> {
                     .black()
                     .on_yellow()
             );
+            println!();
         }
-        println!();
+    }
+
+    // Validate Wallet Addresses (Task 2.1)
+    if !args.address.is_empty() {
+        if !args.quiet {
+            println!("Validating wallet addresses...");
+        }
+        let parsed_results = wallet::parse_addresses(&args.address);
+        let mut valid_addresses = Vec::new();
+        let mut has_errors = false;
+
+        for (i, result) in parsed_results.iter().enumerate() {
+            match result {
+                Ok(addr) => valid_addresses.push(addr.clone()),
+                Err(e) => {
+                    has_errors = true;
+                    eprintln!("Error parsing address '{}': {}", args.address[i], e);
+                }
+            }
+        }
+
+        if has_errors {
+            eprintln!("{}", "Aborting due to invalid wallet addresses.".red());
+            return Ok(1);
+        }
+
+        wallet::print_parsed_addresses(&valid_addresses, args.quiet);
+    }
+
+    // Show Capability Declaration Banner (Task 1.2)
+    let caps = capability::Capabilities::from_args(args.submit, args.publish, false);
+    if !capability::show_capability_banner(&caps, args.accept, args.quiet) {
+        return Ok(0); // User declined
+    }
+
+    if !args.json && !args.quiet {
         println!("Running checks for HFT compliance...\n");
     }
 
@@ -1212,14 +1293,32 @@ async fn run() -> Result<i32> {
         (passed_count as f64 / checks.len() as f64) * 100.0
     };
 
-    // Loss Quantification: The "Physics of Loss" Formula
-    // Jitter Tax = Volume * (Jitter / Block Time) * Volatility Probability
-    // Assumptions:
-    // - Block Time: 400ms (Solana/HFT standard)
-    // - Probability of adverse move during delay: 0.5 (coin flip)
-    // - Impact: Delay causes us to miss the block or ship stale price.
+    // Loss Quantification: The "Jitter Tax" Formula (Task 2.4 + 3.1)
+    // Uses jitter_tax module for provider-specific latency assumptions
 
-    let estimated_jitter_ms: f64 = if all_passed { 0.05 } else { 50.0 }; // 50μs vs 50ms (AWS KMS/Lambda)
+    // Determine provider from --provider flag or interactive prompt
+    let provider = match args.provider.as_deref() {
+        Some("aws-kms") | Some("aws") | Some("kms") => jitter_tax::SigningProvider::AwsKms,
+        Some("mpc") | Some("fireblocks") => jitter_tax::SigningProvider::Mpc,
+        Some("hsm") | Some("local") | Some("enclave") => jitter_tax::SigningProvider::LocalHsm,
+        Some("sentinel") | Some("zerocopy") => jitter_tax::SigningProvider::Sentinel,
+        Some(custom) => {
+            // Try to parse as milliseconds
+            if let Ok(ms) = custom.parse::<u64>() {
+                jitter_tax::SigningProvider::Custom(ms)
+            } else {
+                jitter_tax::SigningProvider::AwsKms // Default
+            }
+        }
+        None => {
+            // Interactive prompt if volume is specified (we're doing a real calculation)
+            if args.volume.is_some() && !args.quiet && !args.json {
+                jitter_tax::prompt_signing_provider(args.quiet)
+            } else {
+                jitter_tax::SigningProvider::AwsKms // Default
+            }
+        }
+    };
 
     let (volatility_multiplier, regime_label) = match args.regime {
         MarketRegime::Low => (1.0, "Low (Baseline)"),
@@ -1227,26 +1326,91 @@ async fn run() -> Result<i32> {
         MarketRegime::High => (5.0, "High (Crisis/Meme) - BIS Multiplier"),
     };
 
-    let estimated_annual_loss = args.volume.map(|vol| {
-        // "Physics of Loss" Model v2
-        let block_time_ms = 400.0;
-        let volatility_factor = 0.5; // 50% chance the price moves against us in that window
-
-        // The probability we miss the block completely is proportional to Jitter / BlockTime
-        let miss_probability = (estimated_jitter_ms / block_time_ms).min(1.0);
-
-        // If we miss the block, we slip by ~1bp (conservative HFT estimate)
-        // Multiplied by the Market Regime Factor
-        let slippage_bps = 1.0 * volatility_multiplier;
-
-        let daily_loss =
-            vol as f64 * miss_probability * (slippage_bps / 10000.0) * volatility_factor;
-
-        // Fallback to the simpler linear model if jitter is huge, to avoid over-capping
-        let simple_loss = vol as f64 * estimated_jitter_ms * 0.0001 * volatility_multiplier;
-
-        (daily_loss.max(simple_loss) * 252.0) as u64
+    // Calculate jitter tax if volume is provided
+    let jitter_tax_result = args.volume.map(|vol| {
+        let params = jitter_tax::JitterTaxParams {
+            provider,
+            daily_volume_usd: vol,
+            slippage_rate: 0.0001 * volatility_multiplier, // Adjusted by market regime
+            trading_days: 365,
+        };
+        jitter_tax::calculate_jitter_tax(&params)
     });
+
+    // Show explain breakdown if requested
+    if args.explain {
+        if let Some(ref result) = jitter_tax_result {
+            jitter_tax::print_explain_breakdown(result);
+        } else if !args.quiet {
+            println!(
+                "{}",
+                "Note: Use --volume $AMOUNT to see Jitter Tax calculation".yellow()
+            );
+        }
+    }
+
+    // Dramatic Reveal + Comparison Table (Tasks 4.2, 4.3)
+    if let Some(ref result) = jitter_tax_result {
+        if !args.explain {
+            // Only show dramatic reveal if not already showing explain breakdown
+            rich_output::dramatic_reveal(
+                result.annual_loss_usd,
+                provider.name(),
+                provider.latency_ms(),
+                args.quiet,
+            );
+        }
+
+        // Always show comparison table
+        rich_output::print_comparison_table(
+            provider.latency_ms(),
+            result.annual_loss_usd,
+            provider.name(),
+            args.quiet,
+        );
+
+        // Show CTA
+        rich_output::print_cta(args.quiet);
+
+        // Generate report if requested (Task 4.4)
+        if let Some(ref report_path) = args.report {
+            let score = pass_rate.round() as u8;
+            let grade = match score {
+                90..=100 => "A",
+                80..=89 => "B",
+                70..=79 => "C",
+                60..=69 => "D",
+                _ => "F",
+            };
+
+            let report_data = pdf_report::PdfReportData {
+                provider_name: provider.name().to_string(),
+                latency_ms: provider.latency_ms(),
+                daily_volume: args.volume.unwrap_or(0),
+                annual_loss: result.annual_loss_usd,
+                potential_savings: result.potential_savings_usd,
+                score,
+                grade: grade.to_string(),
+                checks_passed: passed_count,
+                checks_total: checks.len(),
+                timestamp: chrono_lite_timestamp(),
+            };
+
+            match pdf_report::generate_markdown_report(&report_data, report_path) {
+                Ok(_) => {
+                    if !args.quiet {
+                        println!("{}", format!("✓ Report saved to: {}", report_path).green());
+                    }
+                }
+                Err(e) => {
+                    eprintln!("{}", format!("Error saving report: {}", e).red());
+                }
+            }
+        }
+    }
+
+    let estimated_annual_loss = jitter_tax_result.as_ref().map(|r| r.annual_loss_usd);
+    let _estimated_jitter_ms: f64 = provider.latency_ms() as f64;
 
     let summary = Summary {
         total_checks: checks.len(),
@@ -1549,4 +1713,38 @@ fn handle_keys(args: &Args) -> Result<i32> {
     }
 
     Ok(0)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_xorshift64_deterministic() {
+        let mut rng = XorShift64::new(12345);
+        // Known sequence for this implementation
+        let v1 = rng.next_u64();
+        let _v2 = rng.next_u64();
+        let _v3 = rng.next_u64();
+
+        // Ground Truth captured from correct implementation:
+        // x = 12345 (seed) -> ... -> 13289605635609
+        
+        assert_eq!(v1, 13289605635609, "PRNG Sequence Mismatch! Logic may be mutated.");
+    }
+
+
+    #[test]
+    fn test_xorshift64_range() {
+        let mut rng = XorShift64::new(999);
+        for _ in 0..100 {
+            let r = rng.range(10, 20);
+            assert!(r >= 10 && r < 20, "Range calculation logic violated!");
+        }
+        
+        // Edge case: min == max from mutation finding (cmp operators)
+        assert_eq!(rng.range(50, 50), 50);
+        // Edge case: min > max (should act sane or return min based on impl)
+        assert_eq!(rng.range(60, 50), 60);
+    }
 }

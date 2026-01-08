@@ -2,111 +2,144 @@
 
 [![Build](https://github.com/zerocopy-systems/zcp/actions/workflows/ci.yml/badge.svg)](https://github.com/zerocopy-systems/zcp/actions)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Rust](https://img.shields.io/badge/rust-1.75+-orange.svg)](https://www.rust-lang.org)
+[![Rust](https://img.shields.io/badge/rust-1.82+-orange.svg)](https://www.rust-lang.org)
 
-**Quantify your signing infrastructure's alpha decay.**
+**Quantify your signing infrastructure's revenue leakage — the Jitter Tax.**
 
-ZCP (ZeroCopy Auditor) is a free, open-source CLI tool that measures cryptographic signing latency and jitter. It helps HFT firms and crypto trading operations identify how much profit they're losing to slow key management infrastructure.
+ZCP (ZeroCopy Auditor) is a free, open-source CLI tool that measures cryptographic signing latency and calculates the annual dollar loss (Jitter Tax) from slow key management infrastructure.
 
 ## 🚀 Quick Install
 
 ```bash
 # Install to /usr/local/bin
-curl -sSL https://zerocopy.systems/zcp | sh
+curl -sSL https://zerocopy.systems/install | sh
 
 # Verify installation
 zcp --version
 ```
 
-**⚠️ Security Note:** Always verify the SHA256 checksum of downloaded binaries. See [Releases](https://github.com/zerocopy-systems/zcp/releases) for checksums.
-
-## 📊 What It Measures
-
-| Metric                    | Description                          |
-| ------------------------- | ------------------------------------ |
-| **Latency (P50/P95/P99)** | Signing operation round-trip time    |
-| **Jitter (Std Dev)**      | Variance in signing latency          |
-| **Throughput**            | Maximum signatures per second        |
-| **Alpha Decay**           | Estimated profit loss due to latency |
-
-## 🔧 Usage
+## 📊 Quick Start
 
 ```bash
-# Audit AWS KMS
-zcp audit --signer aws-kms --region us-east-1 --key-id alias/your-key
+# Calculate your Jitter Tax with $10M daily volume
+zcp audit --volume 10000000
 
-# Audit with JSON output
-zcp audit --signer aws-kms --region us-east-1 --json
+# Specify your signing provider
+zcp audit --volume 10000000 --provider aws-kms
 
-# Generate benchmark report
-zcp audit --signer aws-kms --region us-east-1 --output report.json
+# Show detailed calculation breakdown
+zcp audit --volume 10000000 --explain
+
+# Generate a Markdown report
+zcp audit --volume 10000000 --report jitter_audit.md
+```
+
+## 🎯 What It Calculates
+
+The **Jitter Tax Formula**:
+```
+Annual Loss = (Latency_ms / 1000) × Slippage_Rate × Daily_Volume × Trading_Days
 ```
 
 ### Sample Output
 
-```json
-{
-  "signer": "aws-kms",
-  "region": "us-east-1",
-  "samples": 10000,
-  "results": {
-    "latency_p50_ms": 145.2,
-    "latency_p95_ms": 198.7,
-    "latency_p99_ms": 312.4,
-    "jitter_stddev_ms": 42.1,
-    "throughput_max_sps": 312
-  },
-  "score": 35,
-  "grade": "D",
-  "recommendation": "CRITICAL: Jitter exceeds threshold."
-}
+```
+╔════════════════════════════════════════════════════════════╗
+║             ⚠  CRITICAL: JITTER TAX DETECTED               ║
+╠════════════════════════════════════════════════════════════╣
+║  Provider:              AWS KMS                            ║
+║  Signing Latency:       150 ms                             ║
+║  ESTIMATED ANNUAL LOSS: $54.8K                             ║
+╚════════════════════════════════════════════════════════════╝
+
+┌────────────────────────┬──────────────────┬──────────────────┐
+│ Metric                 │ You (Current)    │ ZeroCopy         │
+├────────────────────────┼──────────────────┼──────────────────┤
+│ Time-to-Sign (P99)     │ 150 ms           │ 42 µs            │
+│ Annual Jitter Tax      │ $54.8K           │ $0               │
+│ Potential Savings      │ -                │ $54.8K           │
+└────────────────────────┴──────────────────┴──────────────────┘
 ```
 
-## 📈 Grading Scale
+## 🔧 CLI Options
 
-| Grade | Latency  | Assessment          |
-| ----- | -------- | ------------------- |
-| **A** | < 1ms    | Institutional Grade |
-| **B** | 1-10ms   | Competitive         |
-| **C** | 10-50ms  | At Risk             |
-| **D** | 50-150ms | Bleeding Alpha      |
-| **F** | > 150ms  | Critical            |
+| Option | Description | Example |
+|:-------|:------------|:--------|
+| `--volume <USD>` | Daily trading volume | `--volume 10000000` |
+| `--provider <NAME>` | Signing provider (aws-kms, mpc, hsm, sentinel) | `--provider aws-kms` |
+| `--explain` | Show step-by-step calculation breakdown | `--explain` |
+| `--report <FILE>` | Generate Markdown report | `--report audit.md` |
+| `--accept` | Skip capability declaration prompt | `--accept` |
+| `--address <ADDR>` | Wallet address (EVM 0x... or Solana) | `--address 0x...` |
+| `--regime <TYPE>` | Market volatility (low, medium, high) | `--regime high` |
+| `--json` | Output in JSON format | `--json` |
+| `--sim` | Simulation mode (for testing) | `--sim` |
 
-## 🔐 Supported Signers
+## 📈 Provider Latency Assumptions
 
-- ✅ AWS KMS
-- ✅ GCP Cloud HSM
-- ✅ Azure Key Vault
-- ✅ HashiCorp Vault
-- ✅ Fireblocks MPC
-- ✅ YubiHSM 2
-- 🚧 Local PKCS#11 (coming soon)
+| Provider | Latency (P99) | Source |
+|:---------|:--------------|:-------|
+| AWS KMS | 150 ms | AWS Re:Post Benchmarks |
+| Fireblocks / MPC | 350 ms | Fireblocks Performance Docs |
+| Local HSM | 5 ms | Industry Standard |
+| ZeroCopy Sentinel | 42 µs | Internal Benchmarks |
 
-## 🛡️ Security
+## 🛡️ Security & Trust
+
+Before running any analysis, ZCP displays a **Capability Declaration**:
+
+```
+┌─────────────────────────────────────────────┐
+│  ZCP AUDIT - Capability Declaration         │
+├─────────────────────────────────────────────┤
+│  ✓ READ: System config, public chain data   │
+│  ✗ WRITE: Nothing (except final report)     │
+│  ✗ NETWORK: No calls unless --fetch-rpc     │
+│  ✗ SECRETS: Does not access keystore files  │
+└─────────────────────────────────────────────┘
+```
 
 - **No Data Exfiltration**: All results stay local unless you opt-in with `--submit`
-- **Read-Only Access**: Requires only `kms:Sign` permission (no key management)
-- **Signed Releases**: All binaries are signed with Sigstore cosign
-- **Reproducible Builds**: Build from source with identical outputs
+- **Signed Releases**: All binaries are signed with Sigstore/Cosign
+- **Reproducible Builds**: Build from source with `Dockerfile.reproducible`
 
-See [SECURITY.md](SECURITY.md) for vulnerability reporting.
+### Verify Signatures
+
+```bash
+cosign verify-blob --signature zcp-linux-x86_64.sig \
+  --certificate zcp-linux-x86_64.pem zcp-linux-x86_64
+```
 
 ## 🏗️ Building from Source
 
 ```bash
-# Prerequisites: Rust 1.75+
+# Prerequisites: Rust 1.82+
 git clone https://github.com/zerocopy-systems/zcp.git
-cd zcp
+cd apps/zcp
 cargo build --release
 
-# Binary at: target/release/zcp
+# Binary at: ../../target/release/zcp
+```
+
+### Reproducible Build (Docker)
+
+```bash
+docker build -f Dockerfile.reproducible -t zcp-build .
+docker run --rm -v $(pwd)/output:/output zcp-build
+shasum -a 256 output/zcp  # Compare to release SHA256
+```
+
+## 🧪 Running Tests
+
+```bash
+cargo test
+# Currently: 44 tests passing
 ```
 
 ## 📋 Requirements
 
-- AWS credentials (for AWS KMS auditing)
-- `kms:Sign` permission on target key
-- Rust 1.75+ (for building from source)
+- Rust 1.82+ (for building from source)
+- Optional: AWS credentials for `--publish` flag
 
 ## 🤝 Contributing
 
@@ -119,9 +152,9 @@ Apache License 2.0 — See [LICENSE](LICENSE)
 ## 🔗 Links
 
 - **Website**: [zerocopy.systems](https://zerocopy.systems)
-- **Documentation**: [zerocopy.systems/docs](https://zerocopy.systems/docs)
-- **Jitter Tax Calculator**: [zerocopy.systems/pricing](https://zerocopy.systems/pricing)
+- **Documentation**: [docs.zerocopy.systems](https://docs.zerocopy.systems)
+- **Demo**: [zerocopy.systems/demo](https://zerocopy.systems/demo)
 
 ---
 
-**⭐ Star this repo if it helps you quantify your alpha decay!**
+**⭐ Star this repo if it helps you quantify your Jitter Tax!**

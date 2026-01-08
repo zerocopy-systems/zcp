@@ -86,8 +86,16 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
+      - name: Install cross-compilation tools (ARM Linux)
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+
       - name: Build
         run: cargo build --release --target ${{ matrix.target }}
+        env:
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
 
       - name: Package
         run: |
@@ -101,3 +109,68 @@ jobs:
           path: |
             ${{ matrix.artifact }}
             ${{ matrix.artifact }}.sha256
+
+  # Task 1.1: Sigstore/Cosign Signing + Task 5.4: GitHub Release
+  publish:
+    name: Publish Release
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write  # Required for Sigstore keyless signing
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign binaries with Cosign (Keyless)
+        run: |
+          for binary in artifacts/*/zcp-*; do
+            if [[ ! "$binary" == *.sha256 ]]; then
+              echo "Signing $binary..."
+              cosign sign-blob --yes "$binary" --output-signature "${binary}.sig" --output-certificate "${binary}.pem"
+            fi
+          done
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release-assets
+          for dir in artifacts/*/; do
+            for file in "$dir"*; do
+              if [[ -f "$file" ]]; then
+                cp "$file" release-assets/
+              fi
+            done
+          done
+          ls -la release-assets/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release-assets/*
+          generate_release_notes: true
+          body: |
+            ## ZCP Audit CLI ${{ github.ref_name }}
+            
+            ### Installation
+            ```bash
+            curl -sSL https://zerocopy.systems/install | sh
+            ```
+            
+            ### Verify Signatures (Cosign)
+            ```bash
+            cosign verify-blob --signature zcp-linux-x86_64.sig --certificate zcp-linux-x86_64.pem zcp-linux-x86_64
+            ```
+            
+            ### Quick Start
+            ```bash
+            zcp audit --volume 10000000 --explain
+            ```
+
