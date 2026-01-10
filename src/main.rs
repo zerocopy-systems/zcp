@@ -1741,7 +1741,7 @@ mod tests {
         let mut rng = XorShift64::new(999);
         for _ in 0..100 {
             let r = rng.range(10, 20);
-            assert!(r >= 10 && r < 20, "Range calculation logic violated!");
+            assert!((10..20).contains(&r), "Range calculation logic violated!");
         }
 
         // Edge case: min == max from mutation finding (cmp operators)
