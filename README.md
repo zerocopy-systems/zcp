@@ -1,5 +1,100 @@
-# ZCP — ZeroCopy Auditor CLI
+# ZCP (ZeroCopy Auditor) — The Latency Stethoscope
 
+[![Build](https://github.com/zerocopy-systems/zcp/actions/workflows/ci.yml/badge.svg)](https://github.com/zerocopy-systems/zcp/actions)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Standard](https://img.shields.io/badge/Latency-42μs-green.svg)](https://zerocopy.systems)
+
+**The industry standard for auditing cryptographic signing infrastructure.**
+
+ZCP is a specialized forensic tool designed for Head of Infrastructure and Algo Traders. It benchmarks your current signing setup (AWS KMS, Fireblocks, MPC) against the physics-based limit of modern hardware (42µs).
+
+---
+
+## 🏥 The "Trojan Horse" Audit
+
+For institutional due diligence, run the deep-scan mode. This generates a verifiable "Bill of Health" artifact that can be shared with LPs or internal risk committees.
+
+```bash
+# Generate diligence package
+zcp diligence
+```
+
+**Output: `sentinel_diligence_pack.zip`**
+1. **`infrastructure_audit.md`**: Verifies if you are running on "Sovereign" hardware (Nitro Enclaves) or "Tenant" infrastructure.
+2. **`performance_benchmark.md`**: 100-round high-fidelity latency trace.
+3. **`loss_assessment.json`**: Calculated "Jitter Tax" based on your volume.
+
+---
+
+## 📊 Interactive Audit
+
+If you just want to see the numbers quickly:
+
+```bash
+# 1. basic check
+zcp audit
+
+# 2. specific provider comparison
+zcp audit --provider aws-kms --volume 50000000
+
+# 3. explain the calculation
+zcp audit --explain
+```
+
+### The Jitter Tax Formula
+ZCP calculates revenue leakage using the "Variance Decay" model:
+> *Every 1ms of jitter reduces sharpe ratio by 0.01 for HFT strategies.*
+
+```
+Annual Loss = (Latency_ms / 1000) × Slippage_Rate × Daily_Volume × Trading_Days
+```
+
+---
+
+## 🔧 Installation
+
+### One-Line Install
+```bash
+curl -sL https://zerocopy.systems/zcp | bash
+```
+
+### Build from Source
+Audit the auditor. Ensure the binary matches the code.
+
+```bash
+git clone https://github.com/zerocopy-systems/zcp.git
+cd apps/zcp
+cargo build --release
+sudo cp ../../target/release/zcp /usr/local/bin/
+```
+
+---
+
+## 🛡️ Capability Declaration
+
+ZCP operates on a **"No-Trust"** basis. When you run it, it explicitly declares what it CANNOT do.
+
+```
+┌─────────────────────────────────────────────┐
+│  ZCP AUDIT - Capability Declaration         │
+├─────────────────────────────────────────────┤
+│  ✓ READ: System config, public chain data   │
+│  ✗ WRITE: Nothing (except final report)     │
+│  ✗ NETWORK: No calls unless --fetch-rpc     │
+│  ✗ SECRETS: Does not access keystore files  │
+99: └─────────────────────────────────────────────┘
+```
+
+---
+
+## 🔗 Links
+
+- **[ZeroCopy Systems](https://zerocopy.systems)**
+- **[Documentation](https://docs.zerocopy.systems)**
+- **[Trojan Horse Strategy](https://zerocopy.systems/strategy)**
+
+---
+© 2024 ZeroCopy Systems. *Verified by Physics.*
 [![Build](https://github.com/zerocopy-systems/zcp/actions/workflows/ci.yml/badge.svg)](https://github.com/zerocopy-systems/zcp/actions)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.82+-orange.svg)](https://www.rust-lang.org)

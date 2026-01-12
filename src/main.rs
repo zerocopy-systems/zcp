@@ -14,6 +14,7 @@ use zero_copy_utils::kernel::{self, AuditResult};
 use zeroize::Zeroize;
 
 mod capability;
+use crate::commands::audit::{AuditReport, BlockchainProof, CheckResult, PlatformInfo, Summary};
 mod commands;
 mod jitter_tax;
 mod pdf_report;
@@ -107,6 +108,10 @@ struct Args {
     #[arg(long)]
     explain: bool,
 
+    /// Generate an Institutional-grade report (replaces --report)
+    #[arg(long)]
+    institutional: bool,
+
     /// Generate a Markdown report file (can be converted to PDF)
     /// Example: --report jitter_audit.md
     #[arg(long, value_name = "FILE")]
@@ -190,7 +195,7 @@ enum Command {
         file: String,
     },
     /// Initialize Sovereign Pod keys (Simulated Enclave Keygen)
-    Keys,
+
     /// Scaffold a new ZeroCopy Enclave Project
     Init {
         /// Name of the new project directory
@@ -202,49 +207,48 @@ enum Command {
     Deploy,
     /// Launch the Sovereign Dashboard (Localhost)
     Monitor,
+    /// Run institutional benchmarks (KMS vs Local)
+    Bench {
+        /// Generate a high-impact Institutional Alpha Report
+        #[arg(long)]
+        institutional: bool,
+    },
+    /// Create a Technical Diligence Package (ZIP)
+    Diligence {
+        /// Path to save the diligence package
+        #[arg(short, long, value_name = "FILE")]
+        output: Option<String>,
+    },
+    /// Perform a Zero-Downtime Enclave Upgrade
+    Upgrade {
+        /// Path to the new EIF file
+        #[arg(long)]
+        eif: String,
+        /// Upgrade strategy (atomic, rolling)
+        #[arg(long, default_value = "atomic")]
+        strategy: String,
+    },
+    /// Manage Enclave Signing Keys (Rotation & Policy)
+    Keys {
+        #[command(subcommand)]
+        command: Option<KeyCommand>,
+
+        /// Run in automated daemon mode (for rotate)
+        #[arg(long)]
+        auto: bool,
+    },
 }
 
-/// Audit report structure for JSON serialization
-#[derive(Serialize, Deserialize, Debug)]
-struct AuditReport {
-    version: String,
-    timestamp: String,
-    simulation_mode: bool,
-    platform: PlatformInfo,
-    checks: Vec<CheckResult>,
-    summary: Summary,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    blockchain_proof: Option<BlockchainProof>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-struct PlatformInfo {
-    os: String,
-    is_linux: bool,
-    is_nitro_compatible: bool,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct CheckResult {
-    name: String,
-    passed: bool,
-    details: String,
-    category: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-struct Summary {
-    total_checks: usize,
-    passed: usize,
-    failed: usize,
-    pass_rate: f64,
-    hft_ready: bool,
-    score: u8,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    estimated_annual_loss_usd: Option<u64>,
-    loss_calculation_method: String,
-    market_regime: String,
-    volatility_multiplier: f64,
+#[derive(Subcommand, Debug, Clone)]
+enum KeyCommand {
+    /// Show current key epoch and health status
+    Status,
+    /// Rotate to a new signing key (Epoch N+1)
+    Rotate,
+    /// List history of all known keys
+    List,
+    /// View or configure rotation policy
+    Policy,
 }
 
 /// Anonymized audit submission for benchmarking
@@ -417,13 +421,6 @@ async fn run_competitor_benchmark(quiet: bool) -> Result<()> {
 fn black_box_math(i: u64) -> u64 {
     // Prevent compiler optimization
     i.wrapping_mul(3).wrapping_add(1)
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct BlockchainProof {
-    report_hash: String,
-    transaction_hash: String,
-    contract_address: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -1148,7 +1145,7 @@ async fn run() -> Result<i32> {
     // Handle Subcommands
     match &args.command {
         Some(Command::VerifyProof { file }) => return verify_proof(file, &args),
-        Some(Command::Keys) => return handle_keys(&args),
+
         Some(Command::Init { name }) => return commands::init::run(name.clone()),
         Some(Command::Build) => return commands::build::run(args.verbose),
         Some(Command::Deploy) => return commands::deploy::run(args.verbose),
@@ -1157,6 +1154,28 @@ async fn run() -> Result<i32> {
                 eprintln!("Monitor Error: {}", e);
                 return Ok(1);
             }
+            return Ok(0);
+        }
+        Some(Command::Bench { institutional }) => {
+            return commands::bench::run(*institutional, &args).await;
+        }
+        Some(Command::Diligence { output }) => {
+            commands::diligence::run(output.clone(), &args).await?;
+            return Ok(0);
+        }
+        Some(Command::Upgrade { eif, strategy }) => {
+            commands::upgrade::run(eif.clone(), strategy.clone()).await?;
+            return Ok(0);
+        }
+        Some(Command::Keys { command, auto }) => {
+            let subcommand = match command {
+                Some(KeyCommand::Status) => Some("status".to_string()),
+                Some(KeyCommand::Rotate) => Some("rotate".to_string()),
+                Some(KeyCommand::List) => Some("list".to_string()),
+                Some(KeyCommand::Policy) => Some("policy".to_string()),
+                None => None,
+            };
+            commands::keys::run(subcommand, *auto)?;
             return Ok(0);
         }
         _ => {} // Fall through to Detect/Audit
@@ -1509,7 +1528,7 @@ async fn run() -> Result<i32> {
                 c.details
                     .split_whitespace()
                     .next()
-                    .and_then(|s| s.parse::<u64>().ok())
+                    .and_then(|s: &str| s.parse::<u64>().ok())
             })
             .unwrap_or(0);
 
@@ -1542,8 +1561,10 @@ async fn run() -> Result<i32> {
                 blockchain_proof: None,
             },
             vol,
-            jitter,
+            jitter.max(provider.latency_ms() * 1000),
+            estimated_annual_loss.unwrap_or(0),
             output_path,
+            args.institutional,
         );
     }
 
@@ -1582,12 +1603,14 @@ async fn run() -> Result<i32> {
         }
 
         if let Some(ref output_path) = args.output {
-            let mut file = File::create(output_path)
-                .context(format!("Failed to create output file: {}", output_path))?;
-            file.write_all(report_buffer.as_bytes())
-                .context("Failed to write to file")?;
-            if !args.quiet {
-                println!("\nReport saved to: {}", output_path);
+            if !args.institutional {
+                let mut file = File::create(output_path)
+                    .context(format!("Failed to create output file: {}", output_path))?;
+                file.write_all(report_buffer.as_bytes())
+                    .context("Failed to write to file")?;
+                if !args.quiet {
+                    println!("\nReport saved to: {}", output_path);
+                }
             }
         }
     }
