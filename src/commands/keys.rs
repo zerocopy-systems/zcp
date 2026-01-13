@@ -143,11 +143,10 @@ fn show_policy() -> Result<i32> {
         "Overlap Period".bold(),
         "7 days (Draining Phase)"
     );
-    println!("  {}: {}", "Algorithm".bold(), "Ed25519-Dalek");
+    println!("  {}: Ed25519-Dalek", "Algorithm".bold());
     println!(
-        "  {}: {}",
-        "Storage".bold(),
-        "AWS Nitro Enclave (RamDisk) + S3 (Sealed)"
+        "  {}: AWS Nitro Enclave (RamDisk) + S3 (Sealed)",
+        "Storage".bold()
     );
 
     Ok(0)
