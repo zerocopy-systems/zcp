@@ -209,12 +209,10 @@ cosign verify-blob --signature zcp-linux-x86_64.sig \
 
 ```bash
 # Prerequisites: Rust 1.82+
-```bash
 git clone https://github.com/zerocopy-systems/zcp.git
 cd zcp
 cargo build --release
 sudo cp target/release/zcp /usr/local/bin/
-```
 ```
 
 ### Reproducible Build (Docker)
@@ -243,7 +241,7 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## 📜 License
 
-Apache License 2.0 — See [LICENSE](LICENSE)
+MIT License — See [LICENSE](LICENSE)
 
 ## 🔗 Links
 
