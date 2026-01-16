@@ -2,7 +2,7 @@ use crate::commands::{audit, bench};
 use crate::Args;
 use colored::*;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::Command;
 
 pub async fn run(output_path: Option<String>, _args: &Args) -> anyhow::Result<i32> {

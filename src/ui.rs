@@ -140,11 +140,6 @@ pub fn print_step(step: &str) {
     println!("{} {}", "▶".green(), step);
 }
 
-/// Print a key-value pair
-pub fn print_kv(key: &str, value: &str) {
-    println!("  {}: {}", key.dimmed(), value.white());
-}
-
 /// Print a divider line
 #[allow(dead_code)]
 pub fn print_divider() {

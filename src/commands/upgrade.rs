@@ -1,6 +1,6 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use colored::*;
-use sentinel_shared::{OpCode, SentinelRequest, StatePayload};
+use sentinel_shared::StatePayload;
 use std::time::Duration;
 use tokio::time::sleep;
 

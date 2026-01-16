@@ -1,16 +1,6 @@
-use anyhow::{Context, Result};
-use colored::*;
-use serde::{Deserialize, Serialize};
-
 use crate::ui;
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct KeyStatus {
-    pub epoch: u64,
-    pub created_at: String,
-    pub status: String, // "active", "rotated", "revoked"
-    pub public_key: String,
-}
+use anyhow::Result;
+use colored::*;
 
 pub fn run(subcommand: Option<String>, auto: bool) -> Result<i32> {
     match subcommand.as_deref() {
@@ -137,12 +127,8 @@ fn list_keys() -> Result<i32> {
 fn show_policy() -> Result<i32> {
     ui::print_header("ROTATION POLICY");
 
-    println!("  {}: {}", "Max Key Age".bold(), "90 days");
-    println!(
-        "  {}: {}",
-        "Overlap Period".bold(),
-        "7 days (Draining Phase)"
-    );
+    println!("  {}: 90 days", "Max Key Age".bold());
+    println!("  {}: 7 days (Draining Phase)", "Overlap Period".bold());
     println!("  {}: Ed25519-Dalek", "Algorithm".bold());
     println!(
         "  {}: AWS Nitro Enclave (RamDisk) + S3 (Sealed)",

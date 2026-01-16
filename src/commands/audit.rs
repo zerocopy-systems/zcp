@@ -2,7 +2,7 @@ use colored::*;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::Write;
-use zero_copy_utils::kernel::{self, AuditResult};
+use zero_copy_utils::kernel::{self};
 
 /// Audit report structure for JSON serialization
 #[derive(Serialize, Deserialize, Debug)]
