@@ -1,6 +1,6 @@
+use crate::vendored::StatePayload;
 use anyhow::Result;
 use colored::*;
-use sentinel_shared::StatePayload;
 use std::time::Duration;
 use tokio::time::sleep;
 

@@ -1,3 +1,4 @@
+use crate::vendored::kernel::{self, AuditResult};
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use colored::*;
@@ -10,7 +11,6 @@ use std::fs::File;
 use std::io::IsTerminal;
 use std::io::Write;
 use std::sync::Arc;
-use zero_copy_utils::kernel::{self, AuditResult};
 use zeroize::Zeroize;
 
 mod capability;
@@ -20,6 +20,7 @@ mod jitter_tax;
 mod pdf_report;
 mod rich_output;
 mod ui;
+mod vendored;
 mod wallet;
 
 // Generate type-safe bindings for the Smart Contract
