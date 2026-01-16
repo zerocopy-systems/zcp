@@ -1,7 +1,7 @@
 # ZCP (ZeroCopy Auditor) — The Latency Stethoscope
 
 [![Build](https://github.com/zerocopy-systems/zcp/actions/workflows/ci.yml/badge.svg)](https://github.com/zerocopy-systems/zcp/actions)
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Standard](https://img.shields.io/badge/Latency-42μs-green.svg)](https://zerocopy.systems)
 
 **The industry standard for auditing cryptographic signing infrastructure.**
@@ -63,9 +63,9 @@ Audit the auditor. Ensure the binary matches the code.
 
 ```bash
 git clone https://github.com/zerocopy-systems/zcp.git
-cd apps/zcp
+cd zcp
 cargo build --release
-sudo cp ../../target/release/zcp /usr/local/bin/
+sudo cp target/release/zcp /usr/local/bin/
 ```
 
 ---
@@ -96,7 +96,7 @@ ZCP operates on a **"No-Trust"** basis. When you run it, it explicitly declares 
 ---
 © 2024 ZeroCopy Systems. *Verified by Physics.*
 [![Build](https://github.com/zerocopy-systems/zcp/actions/workflows/ci.yml/badge.svg)](https://github.com/zerocopy-systems/zcp/actions)
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.82+-orange.svg)](https://www.rust-lang.org)
 
 **Quantify your signing infrastructure's revenue leakage — the Jitter Tax.**
@@ -209,11 +209,12 @@ cosign verify-blob --signature zcp-linux-x86_64.sig \
 
 ```bash
 # Prerequisites: Rust 1.82+
+```bash
 git clone https://github.com/zerocopy-systems/zcp.git
-cd apps/zcp
+cd zcp
 cargo build --release
-
-# Binary at: ../../target/release/zcp
+sudo cp target/release/zcp /usr/local/bin/
+```
 ```
 
 ### Reproducible Build (Docker)
