@@ -7,8 +7,4 @@ pub mod kernel;
 pub mod shared;
 
 // Re-export for convenience
-pub use kernel::{
-    check_hugepages, check_iommu, check_isolcpus, check_jitter, check_nitro_enclave,
-    check_tickless, AuditResult, KernelError,
-};
 pub use shared::StatePayload;

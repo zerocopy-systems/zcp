@@ -13,6 +13,7 @@ pub enum KernelError {
     #[error("Failed to read procfs: {0}")]
     Io(#[from] std::io::Error),
 
+    #[allow(dead_code)]
     #[error("Not running on Linux")]
     NotLinux,
 }
