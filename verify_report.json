@@ -1,0 +1,29 @@
+{
+  "total_files": 3,
+  "verified_files": 2,
+  "failed_files": 1,
+  "results": [
+    {
+      "file_path": "test_batch/valid_proof1.json",
+      "success": true,
+      "error": null,
+      "p99_latency_ns": 48000,
+      "is_mock": true
+    },
+    {
+      "file_path": "test_batch/invalid_proof.json",
+      "success": false,
+      "error": "COSE parse error: extraneous data in CBOR input",
+      "p99_latency_ns": 48000,
+      "is_mock": false
+    },
+    {
+      "file_path": "test_batch/valid_proof2.json",
+      "success": true,
+      "error": null,
+      "p99_latency_ns": 49000,
+      "is_mock": true
+    }
+  ],
+  "timestamp": 1770234106
+}

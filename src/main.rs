@@ -200,12 +200,24 @@ enum MarketRegime {
 enum Command {
     /// Run the leakage detector
     Detect,
-    /// Alias for detect
-    Audit,
+    /// Quantify revenue leakage (Jitter Tax) or perform system audits
+    Audit {
+        #[command(subcommand)]
+        action: Option<crate::commands::audit::AuditAction>,
+    },
     /// Verify a cryptographic Proof of Performance (proof.json)
     VerifyProof {
         #[arg(short, long)]
         file: String,
+    },
+    /// Verify a hardware-rooted social identity (e.g., x.com/handle)
+    VerifyIdentity {
+        /// Social handle to verify (e.g., nikhilpadala)
+        #[arg(long)]
+        handle: String,
+        /// Path to the attestation document (attestation.json)
+        #[arg(long)]
+        proof: String,
     },
     /// Initialize Sovereign Pod keys (Simulated Enclave Keygen)
 
@@ -231,6 +243,9 @@ enum Command {
         /// Number of iterations for benchmarking
         #[arg(long, default_value = "1000")]
         iterations: u32,
+        /// Minimal output - only show results
+        #[arg(short, long)]
+        quiet: bool,
     },
     /// Create a Technical Diligence Package (ZIP)
     Diligence {
@@ -255,11 +270,13 @@ enum Command {
         #[arg(long)]
         auto: bool,
     },
-    /// Manage Multi-Factor Authentication
+    /// Management Multi-Factor Authentication
     Mfa {
         #[command(subcommand)]
         command: Option<MfaCommand>,
     },
+    /// Active Operational Repair (Audits + Auto-Heals)
+    Heal,
 }
 
 #[derive(Subcommand, Debug, Clone)]
@@ -1183,7 +1200,29 @@ async fn run() -> Result<i32> {
 
     // Handle Subcommands
     match &args.command {
+        Some(Command::Audit {
+            action: Some(action),
+        }) => match action {
+            crate::commands::audit::AuditAction::Infra { sim } => {
+                return Ok(crate::commands::audit::run_machine_audit(*sim)?);
+            }
+            crate::commands::audit::AuditAction::Code => {
+                return Ok(crate::commands::audit::run_software_audit()?);
+            }
+            crate::commands::audit::AuditAction::Full { sim } => {
+                return Ok(crate::commands::audit::run_full_audit(*sim)?);
+            }
+            crate::commands::audit::AuditAction::Ops => {
+                return Ok(crate::commands::audit::run_workflow_audit()?);
+            }
+            crate::commands::audit::AuditAction::Heal => {
+                return Ok(crate::commands::audit::run_active_heal()?);
+            }
+        },
         Some(Command::VerifyProof { file }) => return verify_proof(file, &args),
+        Some(Command::VerifyIdentity { handle, proof }) => {
+            return crate::commands::identity::run_verify_identity(handle, proof, &args);
+        }
 
         Some(Command::Init { name }) => return commands::init::run(name.clone()),
         Some(Command::Build) => return commands::build::run(args.verbose),
@@ -1199,11 +1238,17 @@ async fn run() -> Result<i32> {
             institutional,
             inference,
             iterations,
+            quiet,
         }) => {
             if *inference {
                 return run_inference_benchmark(*iterations).await;
             }
-            return commands::bench::run(*institutional, &args).await;
+            return commands::bench::run_benchmark_logic(
+                *institutional,
+                *quiet,
+                args.report.clone(),
+            )
+            .await;
         }
         Some(Command::Diligence { output }) => {
             commands::diligence::run(output.clone(), &args).await?;
@@ -1234,6 +1279,9 @@ async fn run() -> Result<i32> {
             };
             commands::keys::run(subcommand, *auto)?;
             return Ok(0);
+        }
+        Some(Command::Heal) => {
+            return Ok(crate::commands::audit::run_active_heal()?);
         }
         _ => {} // Fall through to Detect/Audit
     }

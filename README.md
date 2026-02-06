@@ -20,6 +20,7 @@ zcp diligence
 ```
 
 **Output: `sentinel_diligence_pack.zip`**
+
 1. **`infrastructure_audit.md`**: Verifies if you are running on "Sovereign" hardware (Nitro Enclaves) or "Tenant" infrastructure.
 2. **`performance_benchmark.md`**: 100-round high-fidelity latency trace.
 3. **`loss_assessment.json`**: Calculated "Jitter Tax" based on your volume.
@@ -42,8 +43,10 @@ zcp audit --explain
 ```
 
 ### The Jitter Tax Formula
+
 ZCP calculates revenue leakage using the "Variance Decay" model:
-> *Every 1ms of jitter reduces sharpe ratio by 0.01 for HFT strategies.*
+
+> _Every 1ms of jitter reduces sharpe ratio by 0.01 for HFT strategies._
 
 ```
 Annual Loss = (Latency_ms / 1000) × Slippage_Rate × Daily_Volume × Trading_Days
@@ -54,11 +57,13 @@ Annual Loss = (Latency_ms / 1000) × Slippage_Rate × Daily_Volume × Trading_Da
 ## 🔧 Installation
 
 ### One-Line Install
+
 ```bash
 curl -sL https://zerocopy.systems/zcp | bash
 ```
 
 ### Build from Source
+
 Audit the auditor. Ensure the binary matches the code.
 
 ```bash
@@ -94,7 +99,8 @@ ZCP operates on a **"No-Trust"** basis. When you run it, it explicitly declares 
 - **[Trojan Horse Strategy](https://zerocopy.systems/strategy)**
 
 ---
-© 2024 ZeroCopy Systems. *Verified by Physics.*
+
+© 2024 ZeroCopy Systems. _Verified by Physics._
 [![Build](https://github.com/zerocopy-systems/zcp/actions/workflows/ci.yml/badge.svg)](https://github.com/zerocopy-systems/zcp/actions)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.82+-orange.svg)](https://www.rust-lang.org)
@@ -132,6 +138,7 @@ zcp audit --volume 10000000 --report jitter_audit.md
 ## 🎯 What It Calculates
 
 The **Jitter Tax Formula**:
+
 ```
 Annual Loss = (Latency_ms / 1000) × Slippage_Rate × Daily_Volume × Trading_Days
 ```
@@ -158,26 +165,26 @@ Annual Loss = (Latency_ms / 1000) × Slippage_Rate × Daily_Volume × Trading_Da
 
 ## 🔧 CLI Options
 
-| Option | Description | Example |
-|:-------|:------------|:--------|
-| `--volume <USD>` | Daily trading volume | `--volume 10000000` |
+| Option              | Description                                    | Example              |
+| :------------------ | :--------------------------------------------- | :------------------- |
+| `--volume <USD>`    | Daily trading volume                           | `--volume 10000000`  |
 | `--provider <NAME>` | Signing provider (aws-kms, mpc, hsm, sentinel) | `--provider aws-kms` |
-| `--explain` | Show step-by-step calculation breakdown | `--explain` |
-| `--report <FILE>` | Generate Markdown report | `--report audit.md` |
-| `--accept` | Skip capability declaration prompt | `--accept` |
-| `--address <ADDR>` | Wallet address (EVM 0x... or Solana) | `--address 0x...` |
-| `--regime <TYPE>` | Market volatility (low, medium, high) | `--regime high` |
-| `--json` | Output in JSON format | `--json` |
-| `--sim` | Simulation mode (for testing) | `--sim` |
+| `--explain`         | Show step-by-step calculation breakdown        | `--explain`          |
+| `--report <FILE>`   | Generate Markdown report                       | `--report audit.md`  |
+| `--accept`          | Skip capability declaration prompt             | `--accept`           |
+| `--address <ADDR>`  | Wallet address (EVM 0x... or Solana)           | `--address 0x...`    |
+| `--regime <TYPE>`   | Market volatility (low, medium, high)          | `--regime high`      |
+| `--json`            | Output in JSON format                          | `--json`             |
+| `--sim`             | Simulation mode (for testing)                  | `--sim`              |
 
 ## 📈 Provider Latency Assumptions
 
-| Provider | Latency (P99) | Source |
-|:---------|:--------------|:-------|
-| AWS KMS | 150 ms | AWS Re:Post Benchmarks |
-| Fireblocks / MPC | 350 ms | Fireblocks Performance Docs |
-| Local HSM | 5 ms | Industry Standard |
-| ZeroCopy Sentinel | 42 µs | Internal Benchmarks |
+| Provider          | Latency (P99) | Source                      |
+| :---------------- | :------------ | :-------------------------- |
+| AWS KMS           | 150 ms        | AWS Re:Post Benchmarks      |
+| Fireblocks / MPC  | 350 ms        | Fireblocks Performance Docs |
+| Local HSM         | 5 ms          | Industry Standard           |
+| ZeroCopy Sentinel | 42 µs         | Internal Benchmarks         |
 
 ## 🛡️ Security & Trust
 

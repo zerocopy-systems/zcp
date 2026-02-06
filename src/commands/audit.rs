@@ -3,6 +3,29 @@ use colored::*;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::Write;
+use std::process::Command;
+
+#[derive(clap::Subcommand, Debug, Clone)]
+pub enum AuditAction {
+    /// Run machine infrastructure audit (audit-infra)
+    Infra {
+        /// Simulation mode (mocks enclave hardware)
+        #[arg(long)]
+        sim: bool,
+    },
+    /// Run software code quality audit (audit-code)
+    Code,
+    /// Run both machine and software audits (full-audit)
+    Full {
+        /// Simulation mode for machine audit
+        #[arg(long)]
+        sim: bool,
+    },
+    /// Run workflow and operational audit (audit-ops)
+    Ops,
+    /// Active Operational Repair (Audits + Auto-Heals)
+    Heal,
+}
 
 /// Audit report structure for JSON serialization
 #[derive(Serialize, Deserialize, Debug)]
@@ -235,4 +258,54 @@ fn format_large_number(n: u64) -> String {
         result.push(c);
     }
     result.chars().rev().collect()
+}
+
+pub fn run_machine_audit(sim: bool) -> std::io::Result<i32> {
+    println!("{}", "🚀 Running ZCP Infrastructure Audit...".cyan().bold());
+    let mut cmd = Command::new("tools/audit-infra/scripts/audit.sh");
+    if sim {
+        cmd.arg("--sim");
+    }
+    let status = cmd.status()?;
+    Ok(status.code().unwrap_or(1))
+}
+
+pub fn run_software_audit() -> std::io::Result<i32> {
+    println!("{}", "🔍 Running Sovereign Code Audit...".cyan().bold());
+    let status = Command::new("tools/audit-code/scripts/audit.sh").status()?;
+    Ok(status.code().unwrap_or(1))
+}
+
+pub fn run_full_audit(sim: bool) -> std::io::Result<i32> {
+    println!(
+        "{}",
+        "🛡️ Running Full System Audit (Software + Machine)..."
+            .cyan()
+            .bold()
+    );
+    let mut cmd = Command::new("scripts/full-audit.sh");
+    if sim {
+        cmd.arg("--sim");
+    }
+    let status = cmd.status()?;
+    Ok(status.code().unwrap_or(1))
+}
+
+pub fn run_workflow_audit() -> std::io::Result<i32> {
+    println!("{}", "🛠️ Running Operational Audit...".cyan().bold());
+    let status = Command::new("tools/audit-ops/scripts/audit.sh").status()?;
+    Ok(status.code().unwrap_or(1))
+}
+
+pub fn run_active_heal() -> std::io::Result<i32> {
+    println!(
+        "{}",
+        "🩹 INITIATING ACTIVE HEAL (Sovereign Operations)..."
+            .green()
+            .bold()
+    );
+    let status = Command::new("tools/audit-ops/scripts/audit.sh")
+        .arg("--remediate")
+        .status()?;
+    Ok(status.code().unwrap_or(1))
 }

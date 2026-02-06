@@ -1,0 +1,14 @@
+{
+    "report": {
+        "timestamp": 1700000002,
+        "duration_seconds": 10,
+        "operations_count": 1000,
+        "average_latency_ns": 42000,
+        "p50_latency_ns": 41000,
+        "p90_latency_ns": 45000,
+        "p99_latency_ns": 48000,
+        "p999_latency_ns": 50000,
+        "binary_hash": "ghi"
+    },
+    "attestation_doc_b64": "SU5WQUxJRF9OT1RfTU9DSw=="
+}
