@@ -1,0 +1,36 @@
+.\" Manpage for zerocopy-audit-cli.
+.\" Contact engineering@zerocopy.systems to correct errors or typos.
+.TH man 1 "22 Dec 2025" "1.0.0" "zerocopy-audit-cli man page"
+.SH NAME
+zerocopy-audit-cli \- Automated Infrastructure Auditor for ZeroCopy Systems
+.SH SYNOPSIS
+zerocopy-audit-cli [options]
+.SH DESCRIPTION
+zerocopy-audit-cli runs a suite of compliance and performance checks against local environment, AWS infrastructure, and Kubernetes clusters. It is designed for high-frequency trading infrastructure verification.
+.SH OPTIONS
+.TP
+\fB\-\-json\fR
+Output results in JSON format for CI/CD integration.
+.TP
+\fB\-\-output\fR <FILE>
+Write report to specified file path.
+.TP
+\fB\-\-quiet\fR
+Minimize output (only errors).
+.TP
+\fB\-\-sim\fR
+Simulate checks (useful for dev/test without AWS credentials).
+.TP
+\fB\-\-verify\-contract\fR
+Verify audit results against the AuditRegistry smart contract on Sepolia.
+.SH EXAMPLES
+.TP
+Run full audit and save to report.txt:
+.B zerocopy-audit-cli --output report.txt
+.TP
+Run in CI mode (simulated, json):
+.B zerocopy-audit-cli --sim --json
+.SH BUGS
+Report bugs to <engineering@zerocopy.systems>.
+.SH AUTHOR
+ZeroCopy Systems Engineering Team

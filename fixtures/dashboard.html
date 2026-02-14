@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ZCP Sentry</title>
+    <style>
+      body {
+        background-color: #050505;
+        color: #00ff00;
+        font-family: "Courier New", monospace;
+        margin: 0;
+        padding: 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        border: 1px solid #333;
+        padding: 20px;
+      }
+      h1 {
+        border-bottom: 1px solid #333;
+        padding-bottom: 10px;
+        text-transform: uppercase;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 20px;
+      }
+      .card {
+        border: 1px solid #222;
+        padding: 15px;
+        background: #0a0a0a;
+      }
+      .label {
+        font-size: 0.8em;
+        color: #666;
+        display: block;
+        margin-bottom: 5px;
+      }
+      .value {
+        font-size: 1.2em;
+        font-weight: bold;
+        word-break: break-all;
+      }
+      .status-running {
+        color: #00ff00;
+      }
+      .status-stopped {
+        color: #ff0000;
+      }
+      .blink {
+        animation: blinker 1s linear infinite;
+      }
+      @keyframes blinker {
+        50% {
+          opacity: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>ZCP // Sovereign Sentry <span class="blink">_</span></h1>
+
+      <div class="grid">
+        <div class="card">
+          <span class="label">ENCLAVE STATUS</span>
+          <span id="status" class="value status-running">CONNECTING...</span>
+        </div>
+        <div class="card">
+          <span class="label">UPTIME</span>
+          <span id="uptime" class="value">--</span>
+        </div>
+        <div class="card" style="grid-column: span 2">
+          <span class="label">PCR0 HASH (MEASUREMENT)</span>
+          <span id="pcr0" class="value">--</span>
+        </div>
+        <div class="card">
+          <span class="label">MEMORY (MB)</span>
+          <span id="memory" class="value">--</span>
+        </div>
+        <div class="card">
+          <span class="label">LAST HEARTBEAT</span>
+          <span id="heartbeat" class="value">--</span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      async function poll() {
+        try {
+          const res = await fetch("/api/status");
+          const data = await res.json();
+
+          document.getElementById("status").innerText = data.status;
+          document.getElementById("uptime").innerText =
+            data.uptime_seconds + "s";
+          document.getElementById("pcr0").innerText = data.pcr0;
+          document.getElementById("memory").innerText = data.memory_used_mb;
+          document.getElementById("heartbeat").innerText = data.last_heartbeat;
+        } catch (e) {
+          document.getElementById("status").innerText = "OFFLINE";
+          document.getElementById("status").className = "value status-stopped";
+        }
+      }
+      setInterval(poll, 1000);
+      poll();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,45 @@
+[package]
+name = "zerocopy-audit"
+version = "1.0.0"
+edition = "2021"
+rust-version = "1.82"
+description = "HFT infrastructure latency audit tool — quantify your signing Jitter Tax"
+authors = ["ZeroCopy Systems <engineering@zerocopy.systems>"]
+license = "MIT"
+repository = "https://github.com/zerocopy-systems/zcp"
+homepage = "https://zerocopy.systems"
+readme = "README.md"
+keywords = ["hft", "latency", "audit", "cryptography", "signing"]
+categories = ["command-line-utilities", "cryptography"]
+exclude = ["test_batch/", "fixtures/", ".github/"]
+
+[[bin]]
+name = "zcp"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1.0"
+aws-nitro-enclaves-nsm-api = "0.4"
+axum = { version = "0.8", features = ["macros"] }
+base64 = "0.22"
+clap = { version = "4.4", features = ["derive", "env"] }
+colored = "3.0"
+coset = "0.4"
+dialoguer = "0.12"
+dotenvy = "0.15"
+hex = "0.4.3"
+indicatif = "0.18"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = "0.4"
+sha2 = "0.10.9"
+sys-info = "0.9"
+thiserror = "2.0"
+tokio = { version = "1", features = ["full"] }
+uuid = { version = "1.0", features = ["v4"] }
+
+zcp-audit = { path = "../zcp-audit" }
+zcp-chain = { path = "../zcp-chain" }
+zcp-reporting = { path = "../zcp-reporting" }
+
