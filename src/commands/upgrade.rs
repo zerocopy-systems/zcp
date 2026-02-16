@@ -1,8 +1,14 @@
-use crate::vendored::StatePayload;
 use anyhow::Result;
 use colored::*;
+use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tokio::time::sleep;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct StatePayload {
+    pub ciphertext: Vec<u8>,
+    pub key_id: String,
+}
 
 pub async fn run(eif_path: String, strategy: String) -> Result<()> {
     println!(

@@ -1,0 +1,32 @@
+# Generated files
+/target/
+**/*.rs.bk
+Cargo.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test outputs
+*.log
+*.tmp
+temp_test/
+
+# Secrets (never commit!)
+.env
+.env.local
+*.pem
+*.key
+credentials.json
+
+# Node
+zcp-node/node_modules/
+*.node
+target/

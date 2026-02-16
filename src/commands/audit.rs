@@ -1,9 +1,10 @@
-use crate::vendored::kernel;
 use colored::*;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::Write;
 use std::process::Command;
+use zcp_audit::kernel;
+use zcp_chain::BlockchainProof;
 
 #[derive(clap::Subcommand, Debug, Clone)]
 pub enum AuditAction {
@@ -68,13 +69,6 @@ pub struct Summary {
     pub loss_calculation_method: String,
     pub market_regime: String,
     pub volatility_multiplier: f64,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct BlockchainProof {
-    pub report_hash: String,
-    pub transaction_hash: String,
-    pub contract_address: String,
 }
 
 pub fn run_technicals(sim: bool) -> (Vec<CheckResult>, Summary, PlatformInfo) {

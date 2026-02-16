@@ -1,18 +1,18 @@
-# ZCP (ZeroCopy Auditor) — The Latency Stethoscope
+# ZCP (ZeroCopy Auditor) — Institutional Latency Diagnostic Tool
 
 [![Build](https://github.com/zerocopy-systems/zcp/actions/workflows/ci.yml/badge.svg)](https://github.com/zerocopy-systems/zcp/actions)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Standard](https://img.shields.io/badge/Latency-42μs-green.svg)](https://zerocopy.systems)
+[![Standard](https://img.shields.io/badge/Latency-42μs_Core-green.svg)](https://zerocopy.systems)
 
-**The industry standard for auditing cryptographic signing infrastructure.**
+**The industry standard for auditing institutional signing infrastructure.**
 
-ZCP is a specialized forensic tool designed for Head of Infrastructure and Algo Traders. It benchmarks your current signing setup (AWS KMS, Fireblocks, MPC) against the physics-based limit of modern hardware (42µs).
+ZCP is a specialized forensic tool designed for Infrastructure leads and Quantitative researchers. It benchmarks your current signing setup (AWS KMS, Fireblocks, MPC) against the physics-based limit of cold-cache hardware (42µs Core Latency).
 
 ---
 
-## 🏥 The "Trojan Horse" Audit
+## 🏛️ The Institutional Readiness Audit
 
-For institutional due diligence, run the deep-scan mode. This generates a verifiable "Bill of Health" artifact that can be shared with LPs or internal risk committees.
+For deep technical due diligence, run the comprehensive scan mode. This generates a verifiable "Bill of Health" artifact for risk committees and LPs.
 
 ```bash
 # Generate diligence package
@@ -56,10 +56,22 @@ Annual Loss = (Latency_ms / 1000) × Slippage_Rate × Daily_Volume × Trading_Da
 
 ## 🔧 Installation
 
+### Homebrew (macOS & Linux)
+
+```bash
+brew install zerocopy-systems/tap/zcp
+```
+
 ### One-Line Install
 
 ```bash
-curl -sL https://zerocopy.systems/zcp | bash
+curl -sSL https://raw.githubusercontent.com/zerocopy-systems/zcp/main/install.sh | sh
+```
+
+### Cargo
+
+```bash
+cargo install zerocopy-audit
 ```
 
 ### Build from Source
@@ -111,12 +123,33 @@ ZCP (ZeroCopy Auditor) is a free, open-source CLI tool that measures cryptograph
 
 ## 🚀 Quick Install
 
-```bash
-# Install to /usr/local/bin
-curl -sSL https://zerocopy.systems/install | sh
+### Homebrew (macOS & Linux)
 
-# Verify installation
-zcp --version
+```bash
+brew install zerocopy-systems/tap/zcp
+```
+
+### One-Line Install
+
+```bash
+curl -sSL https://raw.githubusercontent.com/zerocopy-systems/zcp/main/install.sh | sh
+```
+
+### Cargo (from source)
+
+```bash
+cargo install zerocopy-audit
+```
+
+### Build from Source
+
+Audit the auditor. Ensure the binary matches the code.
+
+```bash
+git clone https://github.com/zerocopy-systems/zcp.git
+cd zcp
+cargo build --release
+sudo cp target/release/zcp /usr/local/bin/
 ```
 
 ## 📊 Quick Start

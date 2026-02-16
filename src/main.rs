@@ -1,38 +1,22 @@
-use crate::vendored::kernel::{self, AuditResult};
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use colored::*;
-use dotenv::dotenv;
-use ethers::prelude::*;
+use dotenvy::dotenv;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::fmt::Write as FmtWrite;
 use std::fs::File;
-use std::io::IsTerminal;
 use std::io::Write;
-use std::sync::Arc;
 
-use qr2term::print_qr;
-use totp_rs::{Algorithm, Secret, TOTP};
-use zeroize::Zeroize;
+use zcp_audit::jitter_tax;
+use zcp_audit::kernel::{self, AuditResult};
+use zcp_chain::chain;
+use zcp_chain::mfa;
+use zcp_chain::{capability, wallet};
+use zcp_reporting::{pdf_report, rich_output};
 
-mod capability;
-use crate::commands::audit::{AuditReport, BlockchainProof, CheckResult, PlatformInfo, Summary};
+use crate::commands::audit::{AuditReport, CheckResult, PlatformInfo, Summary};
 mod commands;
-mod jitter_tax;
-mod pdf_report;
-mod rich_output;
-mod ui;
-mod vendored;
-mod wallet;
-
-// Generate type-safe bindings for the Smart Contract
-abigen!(
-    AuditRegistry,
-    r#"[
-        function publishAudit(bytes32 _contentHash, string memory _metadataUri) external returns (bytes32)
-    ]"#
-);
 
 /// ZeroCopy Systems - Revenue Leakage Detector
 ///
@@ -277,6 +261,11 @@ enum Command {
     },
     /// Active Operational Repair (Audits + Auto-Heals)
     Heal,
+    /// Trace signing latency and generate waterfall chart
+    Trace {
+        #[command(subcommand)]
+        action: Option<crate::commands::trace::TraceAction>,
+    },
 }
 
 #[derive(Subcommand, Debug, Clone)]
@@ -505,103 +494,6 @@ fn print_result(result: &AuditResult, quiet: bool, json: bool) {
         println!("[{}] {}", "FAIL".red().bold(), result.check_name);
     }
     println!("      {}", result.details.dimmed());
-}
-
-async fn publish_to_chain(
-    content_hash_hex: &str,
-    metadata: &str,
-    quiet: bool,
-    json: bool,
-) -> Option<BlockchainProof> {
-    // 1. Load Environment
-    let rpc_url = std::env::var("ETH_RPC_URL").ok()?;
-    let mut private_key = std::env::var("ETH_PRIVATE_KEY").ok()?;
-    let contract_addr_str = std::env::var("AUDIT_REGISTRY_ADDRESS").ok()?;
-
-    if !quiet && !json {
-        println!(
-            "\n{}",
-            ">>> INITIATING BLOCKCHAIN VERIFICATION <<<".bold().blue()
-        );
-        println!("{}: {}", "REPORT HASH".cyan(), content_hash_hex);
-        println!("Connecting to network...");
-    }
-
-    // 2. Setup Provider and Signer
-    let provider = Provider::<Http>::try_from(rpc_url).ok()?;
-    let wallet: LocalWallet = private_key.parse().ok()?;
-
-    // SECURITY: Wipe private key from memory immediately after use
-    private_key.zeroize();
-    let chain_id = provider.get_chainid().await.ok()?.as_u64();
-    let client = SignerMiddleware::new(provider, wallet.with_chain_id(chain_id));
-    let client = Arc::new(client);
-
-    // 3. Setup Contract
-    let address: Address = contract_addr_str.parse().ok()?;
-    let contract = AuditRegistry::new(address, client.clone());
-
-    // 4. Convert Hash
-    let hash_bytes: [u8; 32] = hex::decode(content_hash_hex).ok()?.try_into().ok()?;
-
-    // 5. Send Transaction
-    let pb = if !quiet && !json && std::io::stdout().is_terminal() {
-        use indicatif::{ProgressBar, ProgressStyle};
-        let pb = ProgressBar::new_spinner();
-        pb.set_style(
-            ProgressStyle::default_spinner()
-                .tick_chars("⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏")
-                .template("{spinner:.green} {msg}")
-                .unwrap(),
-        );
-        pb.set_message("Anchoring proof to Ethereum...");
-        pb.enable_steady_tick(std::time::Duration::from_millis(100));
-        Some(pb)
-    } else {
-        None
-    };
-
-    match contract
-        .publish_audit(hash_bytes, metadata.to_string())
-        .send()
-        .await
-    {
-        Ok(pending_tx) => match pending_tx.await {
-            Ok(Some(receipt)) => {
-                if let Some(pb) = pb {
-                    pb.finish_and_clear();
-                }
-                let tx_hash = format!("{:#x}", receipt.transaction_hash);
-                if !quiet && !json {
-                    println!("{}: {}", "TX HASH".green(), tx_hash);
-                    println!("{}", "PROOF ANCHORED SUCCESSFULLY.".bold().green());
-                }
-                Some(BlockchainProof {
-                    report_hash: content_hash_hex.to_string(),
-                    transaction_hash: tx_hash,
-                    contract_address: contract_addr_str,
-                })
-            }
-            Ok(None) => {
-                if !quiet && !json {
-                    eprintln!("{}", "Transaction dropped.".red());
-                }
-                None
-            }
-            Err(e) => {
-                if !quiet && !json {
-                    eprintln!("Transaction error: {}", e);
-                }
-                None
-            }
-        },
-        Err(e) => {
-            if !quiet && !json {
-                eprintln!("Contract call error: {}", e);
-            }
-            None
-        }
-    }
 }
 
 // CloudWatch Integration (Via Agent)
@@ -1259,14 +1151,14 @@ async fn run() -> Result<i32> {
             return Ok(0);
         }
         Some(Command::Mfa { command }) => {
-            handle_mfa_command(command).await?;
+            handle_mfa_command(command)?;
             return Ok(0);
         }
         Some(Command::Keys { command, auto }) => {
             // [SECURITY] Enforce MFA for Key Rotation (if configured)
             if let Some(KeyCommand::Rotate) = command {
                 if !*auto {
-                    verify_mfa_interactive()?;
+                    mfa::verify_mfa_interactive()?;
                 }
             }
 
@@ -1282,6 +1174,30 @@ async fn run() -> Result<i32> {
         }
         Some(Command::Heal) => {
             return Ok(crate::commands::audit::run_active_heal()?);
+        }
+        Some(Command::Trace { action }) => {
+            use crate::commands::trace::{run_compare, run_trace, TraceAction};
+            match action {
+                Some(TraceAction::Run {
+                    iterations,
+                    target,
+                    format,
+                    output,
+                }) => {
+                    return Ok(run_trace(*iterations, target, format, output.clone())?);
+                }
+                Some(TraceAction::Compare {
+                    baseline,
+                    candidate,
+                    iterations,
+                }) => {
+                    return Ok(run_compare(baseline, candidate, *iterations)?);
+                }
+                None => {
+                    // Default: run with defaults
+                    return Ok(run_trace(100, "local", "text", None)?);
+                }
+            }
         }
         _ => {} // Fall through to Detect/Audit
     }
@@ -1562,7 +1478,7 @@ async fn run() -> Result<i32> {
         );
 
         // Call the async function
-        let proof = publish_to_chain(&hash_hex, &metadata_uri, args.quiet, args.json).await;
+        let proof = chain::publish_to_chain(&hash_hex, &metadata_uri, args.quiet, args.json).await;
 
         if proof.is_none() && !args.quiet && !args.json {
             println!("{}", "Warning: Publishing failed (check env vars ETH_RPC_URL, ETH_PRIVATE_KEY, AUDIT_REGISTRY_ADDRESS)".yellow());
@@ -1784,123 +1700,12 @@ fn chrono_lite_timestamp() -> String {
     format!("{}", duration.as_secs())
 }
 
-// --- MFA Helpers ---
-
-fn get_mfa_file() -> std::path::PathBuf {
-    // Basic home dir resolution
-    let home = std::env::var("HOME")
-        .map(std::path::PathBuf::from)
-        .unwrap_or_else(|_| std::path::PathBuf::from("."));
-    let mut path = home;
-    path.push(".zerocopy");
-    std::fs::create_dir_all(&path).ok();
-    path.push("mfa.secret");
-    path
-}
-
-fn setup_mfa() -> Result<()> {
-    let mfa_file = get_mfa_file();
-    if mfa_file.exists() {
-        println!("MFA is already configured at {:?}", mfa_file);
-        println!("Delete the file to reset.");
-        return Ok(());
-    }
-
-    let secret = Secret::generate_secret();
-    let secret_bytes = secret.to_bytes().unwrap();
-    let secret_str = secret.to_encoded().to_string();
-
-    let totp = TOTP::new(
-        Algorithm::SHA1,
-        6,
-        1,
-        30,
-        secret_bytes,
-        Some("ZeroCopy".to_string()),
-        "user@zerocopy".to_string(),
-    )
-    .unwrap();
-
-    let qr = totp.get_url();
-    println!("Scan this QR code with your authenticator app:");
-    print_qr(&qr).unwrap();
-    println!("Secret Key: {}", secret_str);
-
-    print!("\nEnter the 6-digit code to confirm: ");
-    std::io::stdout().flush()?;
-    let mut input = String::new();
-    std::io::stdin().read_line(&mut input)?;
-    let code = input.trim();
-
-    if totp.check_current(code).unwrap_or(false) {
-        // Fix permissions?
-        std::fs::write(mfa_file, secret_str)?;
-        println!("MFA Configured Successfully! ✅");
-    } else {
-        println!("Invalid code. MFA setup aborted. ❌");
-    }
-
-    Ok(())
-}
-
-fn verify_mfa_interactive() -> Result<()> {
-    let mfa_file = get_mfa_file();
-    if !mfa_file.exists() {
-        return Ok(()); // MFA Not forced if not setup
-    }
-
-    let secret_str = std::fs::read_to_string(mfa_file)?;
-    let secret = Secret::Encoded(secret_str.trim().to_string());
-    let secret_bytes = secret.to_bytes().unwrap();
-
-    let totp = TOTP::new(
-        Algorithm::SHA1,
-        6,
-        1,
-        30,
-        secret_bytes,
-        Some("ZeroCopy".to_string()),
-        "user@zerocopy".to_string(),
-    )
-    .unwrap();
-
-    print!("🔒 MFA Enabled. Enter 6-digit code: ");
-    std::io::stdout().flush()?;
-    let mut input = String::new();
-    std::io::stdin().read_line(&mut input)?;
-    let code = input.trim();
-
-    if totp.check_current(code).unwrap_or(false) {
-        Ok(())
-    } else {
-        Err(anyhow::anyhow!("Invalid MFA Code"))
-    }
-}
-
-async fn handle_mfa_command(command: &Option<MfaCommand>) -> Result<()> {
+fn handle_mfa_command(command: &Option<MfaCommand>) -> Result<()> {
     match command {
-        Some(MfaCommand::Setup) => setup_mfa(),
+        Some(MfaCommand::Setup) => mfa::setup_mfa(),
         Some(MfaCommand::Verify { code }) => {
-            let mfa_file = get_mfa_file();
-            if !mfa_file.exists() {
-                println!("MFA not configured.");
-                return Ok(());
-            }
-            let secret_str = std::fs::read_to_string(mfa_file)?;
-            let secret = Secret::Encoded(secret_str.trim().to_string());
-            let secret_bytes = secret.to_bytes().unwrap();
-            let totp = TOTP::new(
-                Algorithm::SHA1,
-                6,
-                1,
-                30,
-                secret_bytes,
-                Some("ZeroCopy".to_string()),
-                "user@zerocopy".to_string(),
-            )
-            .unwrap();
-
-            if totp.check_current(code).unwrap_or(false) {
+            let is_valid = mfa::verify_mfa_code(code)?;
+            if is_valid {
                 println!("Valid! ✅");
             } else {
                 println!("Invalid! ❌");

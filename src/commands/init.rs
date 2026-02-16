@@ -4,7 +4,7 @@ use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 
-use crate::ui;
+use zcp_reporting::ui;
 
 pub fn run(name: Option<String>) -> Result<i32> {
     let project_name = name.unwrap_or_else(|| "my-enclave".to_string());

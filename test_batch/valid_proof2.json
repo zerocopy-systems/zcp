@@ -1,14 +1,14 @@
 {
-    "report": {
-        "timestamp": 1700000001,
-        "duration_seconds": 10,
-        "operations_count": 1000,
-        "average_latency_ns": 43000,
-        "p50_latency_ns": 42000,
-        "p90_latency_ns": 46000,
-        "p99_latency_ns": 49000,
-        "p999_latency_ns": 51000,
-        "binary_hash": "def"
-    },
-    "attestation_doc_b64": "TU9DS19WQUxJRF8y"
+  "report": {
+    "timestamp": 1700000001,
+    "duration_seconds": 10,
+    "operations_count": 1000,
+    "average_latency_ns": 43000,
+    "p50_latency_ns": 42000,
+    "p90_latency_ns": 46000,
+    "p99_latency_ns": 49000,
+    "p999_latency_ns": 51000,
+    "binary_hash": "def"
+  },
+  "attestation_doc_b64": "TU9DS19WQUxJRF8y"
 }

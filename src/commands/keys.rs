@@ -1,6 +1,6 @@
-use crate::ui;
 use anyhow::Result;
 use colored::*;
+use zcp_reporting::ui;
 
 pub fn run(subcommand: Option<String>, auto: bool) -> Result<i32> {
     match subcommand.as_deref() {

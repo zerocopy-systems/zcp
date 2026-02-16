@@ -3,7 +3,7 @@ use anyhow::{Context, Result};
 use aws_nitro_enclaves_nsm_api::api::AttestationDoc;
 use colored::*;
 use coset::{CborSerializable, CoseSign1};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use sha2::{Digest, Sha256};
 
 pub fn run_verify_identity(handle: &str, proof_path: &str, args: &Args) -> Result<i32> {

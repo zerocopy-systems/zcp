@@ -1,4 +1,3 @@
-use crate::Args;
 use colored::*;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tokio::time::sleep;
