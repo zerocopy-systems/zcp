@@ -1,15 +1,15 @@
 [package]
-name = "zerocopy-audit"
+name = "zerocopy-cli"
 version = "1.0.0"
 edition = "2021"
 rust-version = "1.82"
-description = "HFT infrastructure latency audit tool — quantify your signing Jitter Tax"
+description = "The Sovereign ZeroCopy CLI - Audit, Manage, and Enforce."
 authors = ["ZeroCopy Systems <engineering@zerocopy.systems>"]
 license = "MIT"
 repository = "https://github.com/zerocopy-systems/zcp"
 homepage = "https://zerocopy.systems"
 readme = "README.md"
-keywords = ["hft", "latency", "audit", "cryptography", "signing"]
+keywords = ["hft", "sovereign", "audit", "cryptography", "signing"]
 categories = ["command-line-utilities", "cryptography"]
 exclude = ["test_batch/", "fixtures/", ".github/"]
 
