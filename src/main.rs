@@ -266,6 +266,12 @@ enum Command {
         #[command(subcommand)]
         action: Option<crate::commands::trace::TraceAction>,
     },
+    /// Run dynamic hardware profiling using Linux 'perf'
+    Profile {
+        /// Target executable or command to profile
+        #[arg(last = true)]
+        command: Vec<String>,
+    },
 }
 
 #[derive(Subcommand, Debug, Clone)]
@@ -1199,6 +1205,10 @@ async fn run() -> Result<i32> {
                 }
             }
         }
+        Some(Command::Profile { command }) => {
+            return crate::commands::profile::run_perf_stat(command);
+        }
+        None => {}
         _ => {} // Fall through to Detect/Audit
     }
 

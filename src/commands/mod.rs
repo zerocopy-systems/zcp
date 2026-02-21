@@ -7,5 +7,6 @@ pub mod identity;
 pub mod init;
 pub mod keys;
 pub mod monitor;
+pub mod profile;
 pub mod trace;
 pub mod upgrade;
