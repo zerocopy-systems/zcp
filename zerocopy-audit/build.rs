@@ -19,7 +19,7 @@ fn main() {
 
     let status = cmd
         .current_dir("../zerocopy-audit-ebpf")
-        .args(&[
+        .args([
             "+nightly",
             "build",
             "--target",
