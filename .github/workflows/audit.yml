@@ -1,0 +1,39 @@
+name: Audit Security & Execution
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build_and_test:
+    name: Build & Test (Linux CO-RE)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust Nightly (for eBPF)
+      uses: dtolnay/rust-toolchain@nightly
+      with:
+        components: rust-src, clippy, rustfmt
+
+    - name: Cache dependencies
+      uses: Swatinem/rust-cache@v2
+
+    - name: Check Formatting
+      run: cargo +nightly fmt --all -- --check
+
+    - name: Run Clippy Lints
+      # We enforce no warnings to maintain strict B2B execution standards
+      run: cargo +nightly clippy --all-targets --all-features -- -D warnings
+
+    - name: Build eBPF Bytecode
+      run: cargo +nightly build --release -Z build-std=core --target bpfel-unknown-none
+      working-directory: zerocopy-audit-ebpf || true
+
+    - name: Test Aggregation Engine
+      run: cargo +nightly test --verbose

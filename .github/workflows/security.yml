@@ -1,0 +1,15 @@
+name: Security Policy
+on:
+  push:
+    paths:
+      - 'SECURITY.md'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Markdown
+        uses: DavidAnson/markdownlint-cli2-action@v15
+        with:
+          globs: 'SECURITY.md'
