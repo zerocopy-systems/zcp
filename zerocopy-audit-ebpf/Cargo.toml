@@ -15,3 +15,5 @@ panic = "abort"
 lto = true
 opt-level = 3
 strip = "none" # bpf requires symbol info
+
+[workspace]
