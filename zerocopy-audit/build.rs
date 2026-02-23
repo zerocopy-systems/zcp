@@ -36,7 +36,9 @@ fn main() {
     }
 
     let target1 = PathBuf::from("../target/bpfel-unknown-none/release/zerocopy-audit-ebpf");
-    let target2 = PathBuf::from("../zerocopy-audit-ebpf/target/bpfel-unknown-none/release/zerocopy-audit-ebpf");
+    let target2 = PathBuf::from(
+        "../zerocopy-audit-ebpf/target/bpfel-unknown-none/release/zerocopy-audit-ebpf",
+    );
 
     let ebpf_artifact = if target1.exists() {
         target1
