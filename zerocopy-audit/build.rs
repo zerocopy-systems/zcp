@@ -35,10 +35,16 @@ fn main() {
         panic!("eBPF build failed");
     }
 
-    // Usually, the compiled artifact is in `../zerocopy-audit-ebpf/target/bpfel-unknown-none/release/zerocopy-audit-ebpf`
-    // We will let the main program include it via `include_bytes_aligned!` using `env!("OUT_DIR")`
-    let ebpf_artifact = PathBuf::from(
-        "../zerocopy-audit-ebpf/target/bpfel-unknown-none/release/zerocopy-audit-ebpf",
-    );
+    let target1 = PathBuf::from("../target/bpfel-unknown-none/release/zerocopy-audit-ebpf");
+    let target2 = PathBuf::from("../zerocopy-audit-ebpf/target/bpfel-unknown-none/release/zerocopy-audit-ebpf");
+
+    let ebpf_artifact = if target1.exists() {
+        target1
+    } else if target2.exists() {
+        target2
+    } else {
+        panic!("eBPF artifact not found at expected workspace/crate target paths");
+    };
+
     std::fs::copy(&ebpf_artifact, &out_path).expect("Failed to copy eBPF artifact to OUT_DIR");
 }
