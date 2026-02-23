@@ -1,294 +1,93 @@
-# ZCP (ZeroCopy Auditor) — Institutional Latency Diagnostic Tool
+# `zcp` // ZeroCopy Auditor
 
-[![Build](https://github.com/zerocopy-systems/zcp/actions/workflows/ci.yml/badge.svg)](https://github.com/zerocopy-systems/zcp/actions)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Standard](https://img.shields.io/badge/Latency-42μs_Core-green.svg)](https://zerocopy.systems)
+[![License](https://img.shields.io/github/license/zerocopy-systems/zcp?style=flat-square)](https://github.com/zerocopy-systems/zcp/blob/main/LICENSE)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/zerocopy-systems/zcp/audit.yml?branch=main&style=flat-square)](https://github.com/zerocopy-systems/zcp/actions)
+[![Downloads](https://img.shields.io/github/downloads/zerocopy-systems/zcp/total?style=flat-square)](https://github.com/zerocopy-systems/zcp/releases)
 
-**The industry standard for auditing institutional signing infrastructure.**
+**The Observer Effect is Costing You Millions.**
 
-ZCP is a specialized forensic tool designed for Infrastructure leads and Quantitative researchers. It benchmarks your current signing setup (AWS KMS, Fireblocks, MPC) against the physics-based limit of cold-cache hardware (42µs Core Latency).
+`zcp` (ZeroCopy Auditor) is an eBPF-powered diagnostic wedge built for quantitative trading desks, HFT firms, and autonomous agent runners. It safely measures kernel-level scheduling loops and network stack bloat without inducing the artificial latency inherent to `strace`, Python `asyncio`, or Node.js Garbage Collection profilers.
 
----
+> **Stop bleeding alpha.** Prove your infrastructure's true latency to the microsecond, and calculate your annual **Jitter Tax**.
 
-## 🏛️ The Institutional Readiness Audit
+## 🧠 Why B2B Desks Trust `zcp`
 
-For deep technical due diligence, run the comprehensive scan mode. This generates a verifiable "Bill of Health" artifact for risk committees and LPs.
+When operating below the 1ms boundary, traditional observability tools fail. If you attach a debugger to a live futures bot, the system slows down. If you don't attach one, you trade blind.
 
-```bash
-# Generate diligence package
-zcp diligence
-```
+`zcp` bridges this gap using Linux **eBPF (Extended Berkeley Packet Filter)**. We load statically verified bytecode directly into the kernel:
+1. `tracepoint:sched:sched_wakeup`
+2. `tracepoint:sched:sched_switch`
+3. `kprobe:tcp_recvmsg`
 
-**Output: `sentinel_diligence_pack.zip`**
+Instead of context-switching to print logs, `zcp` writes highly compact `$T_1` and `$T_2` timestamps into a `bpf_perf_event_output` RingBuffer. The user-space CLI aggregates these signals completely asynchronously—giving you a 100% Observer-Free breakdown of your `epoll/select` wait delays.
 
-1. **`infrastructure_audit.md`**: Verifies if you are running on "Sovereign" hardware (Nitro Enclaves) or "Tenant" infrastructure.
-2. **`performance_benchmark.md`**: 100-round high-fidelity latency trace.
-3. **`loss_assessment.json`**: Calculated "Jitter Tax" based on your volume.
+## 🚀 Quickstart
 
----
+### 1. Installation
 
-## 📊 Interactive Audit
-
-If you just want to see the numbers quickly:
+`zcp` is distributed as a single, statically-linked CO-RE binary for Linux (no external dependencies required).
 
 ```bash
-# 1. basic check
-zcp audit
+# via bash
+curl -sL https://zerocopy.systems/audit/install.sh | bash
 
-# 2. specific provider comparison
-zcp audit --provider aws-kms --volume 50000000
-
-# 3. explain the calculation
-zcp audit --explain
+# or via Cargo (requires nightly toolchain for eBPF)
+cargo install --git https://github.com/zerocopy-systems/zcp
 ```
 
-### The Jitter Tax Formula
+### 2. Run the Diagnostic Wedge
 
-ZCP calculates revenue leakage using the "Variance Decay" model:
-
-> _Every 1ms of jitter reduces sharpe ratio by 0.01 for HFT strategies._
-
-```
-Annual Loss = (Latency_ms / 1000) × Slippage_Rate × Daily_Volume × Trading_Days
-```
-
----
-
-## 🔧 Installation
-
-### Homebrew (macOS & Linux)
+Because `zcp` injects tracepoints into the Linux CFS scheduler, it requires `sudo` (`CAP_BPF` and `CAP_PERFMON`).
 
 ```bash
-brew install zerocopy-systems/tap/zcp
+# Example: Tracing a Python asyncio bot 
+export BOT_PID=$(pgrep python)
+
+sudo zcp audit --pid $BOT_PID --volume 50000000 --slippage 0.0001 --json
 ```
 
-### One-Line Install
+### 3. The Output (The Bill of Health)
 
-```bash
-curl -sSL https://raw.githubusercontent.com/zerocopy-systems/zcp/main/install.sh | sh
+`zcp` will output a forensic `bill_of_health.json` detailing your exact scheduling delays and translating the microsecond slippage to an annual USD financial loss (The Jitter Tax).
+
+```json
+{
+  "target_pid": 14205,
+  "measurements": {
+    "p99_sched_wakeup_ns": 42530,
+    "p99_kernel_stack_ns": 12100,
+    "p99_total_overhead_ns": 54630,
+    "jitter_tax_annual_loss_usd": 1240500.00
+  },
+  "grade": "D",
+  "recommendation": "CRITICAL: Jitter exceeds threshold. Python GIL locking proven. Migrate to ZeroCopy AF_XDP Engine."
+}
 ```
 
-### Cargo
+## 🏗️ Architecture vs. Legacy Benchmarks
 
-```bash
-cargo install zerocopy-audit
-```
+| Feature | Legacy Tracing (`strace`, `perf`) | `zcp` (ZeroCopy eBPF) |
+| :--- | :--- | :--- |
+| **Context Switches** | High (Induces Artificial Lag) | **Zero** (Kernel RingBuffer) |
+| **Financial Translation** | None (Raw timestamps) | **Native** $L = V \times F \times P(J)$ |
+| **Network Interception** | `libpcap` (TCP Copy Overhead) | **Direct Kernel Probes** |
+| **Binary Size** | Large (Heavy dependencies) | **Single CO-RE Static Binary** |
 
-### Build from Source
+## 🛡️ Security & Enterprise Integration
 
-Audit the auditor. Ensure the binary matches the code.
+Trading infrastructure represents the lifeblood of your firm. We treat the security of our diagnostic tools as a P0 constraint.
 
-```bash
-git clone https://github.com/zerocopy-systems/zcp.git
-cd zcp
-cargo build --release
-sudo cp target/release/zcp /usr/local/bin/
-```
+*   `zcp` **does not** read payload data. It only measures timestamps at kernel tracepoints.
+*   `zcp` **does not** send telemetry outward. The JSON report is generated exclusively on your local machine.
+*   The eBPF bytecode is validated natively by the Linux kernel verifier before loading, absolutely guaranteeing it cannot crash or halt your trading threads.
 
----
-
-## 🛡️ Capability Declaration
-
-ZCP operates on a **"No-Trust"** basis. When you run it, it explicitly declares what it CANNOT do.
-
-```
-┌─────────────────────────────────────────────┐
-│  ZCP AUDIT - Capability Declaration         │
-├─────────────────────────────────────────────┤
-│  ✓ READ: System config, public chain data   │
-│  ✗ WRITE: Nothing (except final report)     │
-│  ✗ NETWORK: No calls unless --fetch-rpc     │
-│  ✗ SECRETS: Does not access keystore files  │
-99: └─────────────────────────────────────────────┘
-```
-
----
-
-## 🔗 Links
-
-- **[ZeroCopy Systems](https://zerocopy.systems)**
-- **[Documentation](https://docs.zerocopy.systems)**
-- **[Trojan Horse Strategy](https://zerocopy.systems/strategy)**
-
----
-
-© 2024 ZeroCopy Systems. _Verified by Physics._
-[![Build](https://github.com/zerocopy-systems/zcp/actions/workflows/ci.yml/badge.svg)](https://github.com/zerocopy-systems/zcp/actions)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Rust](https://img.shields.io/badge/rust-1.82+-orange.svg)](https://www.rust-lang.org)
-
-**Quantify your signing infrastructure's revenue leakage — the Jitter Tax.**
-
-ZCP (ZeroCopy Auditor) is a free, open-source CLI tool that measures cryptographic signing latency and calculates the annual dollar loss (Jitter Tax) from slow key management infrastructure.
-
-## 🚀 Quick Install
-
-### Homebrew (macOS & Linux)
-
-```bash
-brew install zerocopy-systems/tap/zcp
-```
-
-### One-Line Install
-
-```bash
-curl -sSL https://raw.githubusercontent.com/zerocopy-systems/zcp/main/install.sh | sh
-```
-
-### Cargo (from source)
-
-```bash
-cargo install zerocopy-audit
-```
-
-### Build from Source
-
-Audit the auditor. Ensure the binary matches the code.
-
-```bash
-git clone https://github.com/zerocopy-systems/zcp.git
-cd zcp
-cargo build --release
-sudo cp target/release/zcp /usr/local/bin/
-```
-
-## 📊 Quick Start
-
-```bash
-# Calculate your Jitter Tax with $10M daily volume
-zcp audit --volume 10000000
-
-# Specify your signing provider
-zcp audit --volume 10000000 --provider aws-kms
-
-# Show detailed calculation breakdown
-zcp audit --volume 10000000 --explain
-
-# Generate a Markdown report
-zcp audit --volume 10000000 --report jitter_audit.md
-```
-
-## 🎯 What It Calculates
-
-The **Jitter Tax Formula**:
-
-```
-Annual Loss = (Latency_ms / 1000) × Slippage_Rate × Daily_Volume × Trading_Days
-```
-
-### Sample Output
-
-```
-╔════════════════════════════════════════════════════════════╗
-║             ⚠  CRITICAL: JITTER TAX DETECTED               ║
-╠════════════════════════════════════════════════════════════╣
-║  Provider:              AWS KMS                            ║
-║  Signing Latency:       150 ms                             ║
-║  ESTIMATED ANNUAL LOSS: $54.8K                             ║
-╚════════════════════════════════════════════════════════════╝
-
-┌────────────────────────┬──────────────────┬──────────────────┐
-│ Metric                 │ You (Current)    │ ZeroCopy         │
-├────────────────────────┼──────────────────┼──────────────────┤
-│ Time-to-Sign (P99)     │ 150 ms           │ 42 µs            │
-│ Annual Jitter Tax      │ $54.8K           │ $0               │
-│ Potential Savings      │ -                │ $54.8K           │
-└────────────────────────┴──────────────────┴──────────────────┘
-```
-
-## 🔧 CLI Options
-
-| Option              | Description                                    | Example              |
-| :------------------ | :--------------------------------------------- | :------------------- |
-| `--volume <USD>`    | Daily trading volume                           | `--volume 10000000`  |
-| `--provider <NAME>` | Signing provider (aws-kms, mpc, hsm, sentinel) | `--provider aws-kms` |
-| `--explain`         | Show step-by-step calculation breakdown        | `--explain`          |
-| `--report <FILE>`   | Generate Markdown report                       | `--report audit.md`  |
-| `--accept`          | Skip capability declaration prompt             | `--accept`           |
-| `--address <ADDR>`  | Wallet address (EVM 0x... or Solana)           | `--address 0x...`    |
-| `--regime <TYPE>`   | Market volatility (low, medium, high)          | `--regime high`      |
-| `--json`            | Output in JSON format                          | `--json`             |
-| `--sim`             | Simulation mode (for testing)                  | `--sim`              |
-
-## 📈 Provider Latency Assumptions
-
-| Provider          | Latency (P99) | Source                      |
-| :---------------- | :------------ | :-------------------------- |
-| AWS KMS           | 150 ms        | AWS Re:Post Benchmarks      |
-| Fireblocks / MPC  | 350 ms        | Fireblocks Performance Docs |
-| Local HSM         | 5 ms          | Industry Standard           |
-| ZeroCopy Sentinel | 42 µs         | Internal Benchmarks         |
-
-## 🛡️ Security & Trust
-
-Before running any analysis, ZCP displays a **Capability Declaration**:
-
-```
-┌─────────────────────────────────────────────┐
-│  ZCP AUDIT - Capability Declaration         │
-├─────────────────────────────────────────────┤
-│  ✓ READ: System config, public chain data   │
-│  ✗ WRITE: Nothing (except final report)     │
-│  ✗ NETWORK: No calls unless --fetch-rpc     │
-│  ✗ SECRETS: Does not access keystore files  │
-└─────────────────────────────────────────────┘
-```
-
-- **No Data Exfiltration**: All results stay local unless you opt-in with `--submit`
-- **Signed Releases**: All binaries are signed with Sigstore/Cosign
-- **Reproducible Builds**: Build from source with `Dockerfile.reproducible`
-
-### Verify Signatures
-
-```bash
-cosign verify-blob --signature zcp-linux-x86_64.sig \
-  --certificate zcp-linux-x86_64.pem zcp-linux-x86_64
-```
-
-## 🏗️ Building from Source
-
-```bash
-# Prerequisites: Rust 1.82+
-git clone https://github.com/zerocopy-systems/zcp.git
-cd zcp
-cargo build --release
-sudo cp target/release/zcp /usr/local/bin/
-```
-
-### Reproducible Build (Docker)
-
-```bash
-docker build -f Dockerfile.reproducible -t zcp-build .
-docker run --rm -v $(pwd)/output:/output zcp-build
-shasum -a 256 output/zcp  # Compare to release SHA256
-```
-
-## 🧪 Running Tests
-
-```bash
-cargo test
-# Currently: 44 tests passing
-```
-
-## 📋 Requirements
-
-- Rust 1.82+ (for building from source)
-- Optional: AWS credentials for `--publish` flag
+See [SECURITY.md](SECURITY.md) for our vulnerability disclosure policy and bug bounty program.
 
 ## 🤝 Contributing
 
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+We welcome contributions from quantitative developers and infrastructure engineers.
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for our strict PR requirements (linear history, verified benchmarks, etc.).
 
-## 📜 License
+## ⚖️ License
 
-MIT License — See [LICENSE](LICENSE)
-
-## 🔗 Links
-
-- **Website**: [zerocopy.systems](https://zerocopy.systems)
-- **Documentation**: [docs.zerocopy.systems](https://docs.zerocopy.systems)
-- **Demo**: [zerocopy.systems/demo](https://zerocopy.systems/demo)
-
----
-
-**⭐ Star this repo if it helps you quantify your Jitter Tax!**
+Dual-licensed under [Apache 2.0](LICENSE) — optimized for unencumbered enterprise adoption.
