@@ -1,5 +1,5 @@
 use clap::Parser;
-use log::{info, warn, error};
+use log::{error, info, warn};
 use serde::Serialize;
 use std::time::Duration;
 use tokio::signal;

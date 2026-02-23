@@ -2,10 +2,10 @@
 #![no_main]
 
 use aya_ebpf::{
-    macros::{map, kprobe, tracepoint},
+    helpers::{bpf_get_current_pid_tgid, bpf_ktime_get_ns},
+    macros::{kprobe, map, tracepoint},
     maps::{HashMap, PerfEventArray},
     programs::{ProbeContext, TracePointContext},
-    helpers::{bpf_get_current_pid_tgid, bpf_ktime_get_ns},
 };
 use zerocopy_audit_common::LatencyEvent;
 
@@ -27,8 +27,9 @@ pub fn audit_net_rx(_ctx: TracePointContext) -> u32 {
 
 #[tracepoint]
 pub fn audit_sched_wakeup(ctx: TracePointContext) -> u32 {
-    let pid = unsafe { core::ptr::read_unaligned((ctx.as_ptr() as *const u8).add(16) as *const u32) };
-    
+    let pid =
+        unsafe { core::ptr::read_unaligned((ctx.as_ptr() as *const u8).add(16) as *const u32) };
+
     if unsafe { TARGET_PID.get(&pid).is_some() } {
         let time = unsafe { bpf_ktime_get_ns() };
         let mut event = LatencyEvent {
@@ -45,8 +46,9 @@ pub fn audit_sched_wakeup(ctx: TracePointContext) -> u32 {
 
 #[tracepoint]
 pub fn audit_sched_switch(ctx: TracePointContext) -> u32 {
-    let next_pid = unsafe { core::ptr::read_unaligned((ctx.as_ptr() as *const u8).add(40) as *const u32) };
-    
+    let next_pid =
+        unsafe { core::ptr::read_unaligned((ctx.as_ptr() as *const u8).add(40) as *const u32) };
+
     if unsafe { TARGET_PID.get(&next_pid).is_some() } {
         if let Some(mut event) = unsafe { START_TIMES.get(&next_pid) }.copied() {
             event.t3_sched_switch = unsafe { bpf_ktime_get_ns() };
@@ -59,7 +61,7 @@ pub fn audit_sched_switch(ctx: TracePointContext) -> u32 {
 #[kprobe]
 pub fn audit_tcp_recvmsg(ctx: ProbeContext) -> u32 {
     let pid = unsafe { bpf_get_current_pid_tgid() as u32 };
-    
+
     if unsafe { TARGET_PID.get(&pid).is_some() } {
         if let Some(mut event) = unsafe { START_TIMES.get(&pid) }.copied() {
             event.t4_tcp_recvmsg = unsafe { bpf_ktime_get_ns() };

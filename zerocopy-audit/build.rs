@@ -16,7 +16,7 @@ fn main() {
             cmd.env_remove(&key);
         }
     }
-    
+
     let status = cmd
         .current_dir("../zerocopy-audit-ebpf")
         .args(&[

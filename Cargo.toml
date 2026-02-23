@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "zerocopy-audit",
+    "zerocopy-audit-common",
+    "zerocopy-audit-ebpf"
+]
+resolver = "2"
