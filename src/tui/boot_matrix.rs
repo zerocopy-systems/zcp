@@ -1,9 +1,6 @@
 use anyhow::Result;
 use crossterm::event::{self, Event, KeyCode};
-use ratatui::{
-    prelude::*,
-    widgets::*,
-};
+use ratatui::{prelude::*, widgets::*};
 use std::time::{Duration, Instant};
 
 /// Runs the 60fps boot matrix animation
@@ -14,7 +11,7 @@ pub fn run_boot_matrix(terminal: &mut Terminal<CrosstermBackend<std::io::Stdout>
     while start.elapsed() < duration {
         terminal.draw(|f| {
             let size = f.area();
-            
+
             let progress = start.elapsed().as_secs_f32() / duration.as_secs_f32();
             let opacity = (progress * 255.0) as u8;
 
@@ -29,19 +26,19 @@ pub fn run_boot_matrix(terminal: &mut Terminal<CrosstermBackend<std::io::Stdout>
             let text = vec![
                 Line::from(vec![Span::styled(
                     "INITIALIZING ZERO-COPY PIPELINE...",
-                    Style::default().fg(Color::Rgb(0, opacity, 0)).bold()
+                    Style::default().fg(Color::Rgb(0, opacity, 0)).bold(),
                 )]),
                 Line::from(vec![Span::styled(
                     "PCR0 VERIFICATION: OK",
-                    Style::default().fg(Color::Rgb(0, opacity, 0))
+                    Style::default().fg(Color::Rgb(0, opacity, 0)),
                 )]),
                 Line::from(vec![Span::styled(
                     "LATENCY CONSTRAINT: < 42µs",
-                    Style::default().fg(Color::Rgb(0, opacity, 0))
+                    Style::default().fg(Color::Rgb(0, opacity, 0)),
                 )]),
                 Line::from(vec![Span::styled(
                     "████████████████████████████████",
-                    Style::default().fg(Color::Rgb(80, 250, 123))
+                    Style::default().fg(Color::Rgb(80, 250, 123)),
                 )]),
             ];
 

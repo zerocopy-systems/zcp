@@ -1,6 +1,6 @@
 pub mod boot_matrix;
-pub mod monitor;
 pub mod error_tree;
+pub mod monitor;
 
 use anyhow::Result;
 use crossterm::{
