@@ -17,6 +17,7 @@ use zcp_reporting::{pdf_report, rich_output};
 
 use crate::commands::audit::{AuditReport, CheckResult, PlatformInfo, Summary};
 mod commands;
+pub mod tui;
 
 /// ZeroCopy Systems - Revenue Leakage Detector
 ///
@@ -1126,10 +1127,18 @@ async fn run() -> Result<i32> {
         Some(Command::Build) => return commands::build::run(args.verbose),
         Some(Command::Deploy) => return commands::deploy::run(args.verbose),
         Some(Command::Monitor) => {
-            if let Err(e) = commands::monitor::run().await {
+            let mut terminal = tui::init_terminal()?;
+            if let Err(e) = tui::boot_matrix::run_boot_matrix(&mut terminal) {
+                let _ = tui::restore_terminal(terminal);
+                eprintln!("Matrix Error: {}", e);
+                return Ok(1);
+            }
+            if let Err(e) = tui::monitor::run_live_monitor(&mut terminal) {
+                let _ = tui::restore_terminal(terminal);
                 eprintln!("Monitor Error: {}", e);
                 return Ok(1);
             }
+            tui::restore_terminal(terminal)?;
             return Ok(0);
         }
         Some(Command::Bench {
