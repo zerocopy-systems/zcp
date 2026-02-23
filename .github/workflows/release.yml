@@ -29,6 +29,12 @@ jobs:
         uses: dtolnay/rust-toolchain@nightly
         with:
           components: rust-src
+
+      - name: Install cargo-binstall
+        uses: cargo-bins/cargo-binstall@main
+          
+      - name: Install bpf-linker
+        run: cargo binstall -y bpf-linker
           
       - name: Build x86_64-unknown-linux-musl
         run: |

@@ -24,6 +24,12 @@ jobs:
     - name: Cache dependencies
       uses: Swatinem/rust-cache@v2
 
+    - name: Install cargo-binstall
+      uses: cargo-bins/cargo-binstall@main
+
+    - name: Install bpf-linker (eBPF compiler)
+      run: cargo binstall -y bpf-linker
+
     - name: Check Formatting
       run: cargo +nightly fmt --all -- --check
 
