@@ -1,7 +1,6 @@
 use clap::Parser;
-use log::{error, info, warn};
+use log::info;
 use serde::Serialize;
-use std::time::Duration;
 use tokio::signal;
 use zerocopy_audit_common::LatencyEvent;
 
@@ -12,7 +11,7 @@ use aya::programs::{KProbe, TracePoint};
 #[cfg(target_os = "linux")]
 use aya::util::online_cpus;
 #[cfg(target_os = "linux")]
-use aya::{include_bytes_aligned, Bpf};
+use aya::{include_bytes_aligned, Ebpf};
 #[cfg(target_os = "linux")]
 use bytes::BytesMut;
 
@@ -50,7 +49,7 @@ async fn main() -> anyhow::Result<()> {
     #[cfg(target_arch = "x86_64")]
     let bpf_data = include_bytes_aligned!(concat!(env!("OUT_DIR"), "/zerocopy_audit_ebpf"));
 
-    let mut bpf = Bpf::load(bpf_data)?;
+    let mut bpf = Ebpf::load(bpf_data)?;
 
     // Attach Sched Wakeup
     let sched_wakeup: &mut TracePoint =
@@ -84,7 +83,7 @@ async fn main() -> anyhow::Result<()> {
 
     info!("Listening for 100 packets to establish the baseline...");
 
-    for cpu_id in online_cpus()? {
+    for cpu_id in online_cpus().map_err(|e| anyhow::anyhow!("CPU Error: {:?}", e))? {
         let mut buf = events.open(cpu_id, None)?;
 
         tokio::spawn(async move {
