@@ -1,0 +1,29 @@
+name: ZCP Ecosystem Alerting
+
+on:
+  workflow_run:
+    workflows: ["Audit Security & Execution", "Release", "CodeQL Advanced Security"]
+    types:
+      - completed
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Broadcast to Discord
+        if: env.DISCORD_WEBHOOK != ''
+        uses: tsickert/discord-webhook@v5.3.0
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
+          content: "🦅 **ZCP Alert**: Workflow `${{ github.event.workflow_run.name }}` completed with status: **${{ github.event.workflow_run.conclusion }}**.\nCommit: `${{ github.event.workflow_run.head_sha }}`\nReview here: ${{ github.event.workflow_run.html_url }}"
+
+      - name: Broadcast to Slack
+        if: env.SLACK_WEBHOOK != ''
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_COLOR: ${{ github.event.workflow_run.conclusion == 'success' && 'good' || 'danger' }}
+          SLACK_MESSAGE: "Workflow *${{ github.event.workflow_run.name }}* finished with status: *${{ github.event.workflow_run.conclusion }}*. <${{ github.event.workflow_run.html_url }}|View Run>"
+          SLACK_TITLE: "ZCP Ecosystem Telemetry"
