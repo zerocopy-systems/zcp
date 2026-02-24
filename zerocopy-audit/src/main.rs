@@ -27,6 +27,7 @@ struct Args {
 }
 
 #[derive(Serialize)]
+#[allow(dead_code)]
 struct BillOfHealth {
     target_pid: u32,
     p99_sched_wakeup_ns: u64,
@@ -92,14 +93,13 @@ async fn main() -> anyhow::Result<()> {
                 .collect::<Vec<_>>();
             loop {
                 if let Ok(events) = buf.read_events(&mut buffers).await {
-                    for i in 0..events.read {
-                        let buf = &mut buffers[i];
+                    for buf in buffers.iter_mut().take(events.read) {
                         let event = unsafe {
                             std::ptr::read_unaligned(buf.as_ptr() as *const LatencyEvent)
                         };
                         // Aggregation calculations
                         let rq_delay = event.t3_sched_switch.saturating_sub(event.t2_sched_wakeup);
-                        let stack_delay =
+                        let _stack_delay =
                             event.t4_tcp_recvmsg.saturating_sub(event.t2_sched_wakeup);
                         if rq_delay > 0 && rq_delay < 10_000_000 {
                             // Print the terrifying reality
