@@ -78,8 +78,8 @@ async fn main() -> anyhow::Result<()> {
     // Setup Ring Buffer Polling
     let mut events: AsyncPerfEventArray<_> = bpf.take_map("EVENTS").unwrap().try_into()?;
 
-    let mut runqueue_delays = Vec::new();
-    let mut stack_delays = Vec::new();
+    let _runqueue_delays: Vec<u64> = Vec::new();
+    let _stack_delays: Vec<u64> = Vec::new();
 
     info!("Listening for 100 packets to establish the baseline...");
 
