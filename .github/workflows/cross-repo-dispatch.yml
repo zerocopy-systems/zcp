@@ -1,0 +1,22 @@
+name: Cross-Repo Telemetry Dispatch
+
+on:
+  push:
+    branches:
+      - main
+  release:
+    types: [published]
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Repository Dispatch to Monorepo
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          # Note: A valid PAT (Personal Access Token) with repo scope is required to dispatch to another repository.
+          # The user must configure secrets.MONOREPO_DISPATCH_TOKEN in the repository settings.
+          token: ${{ secrets.MONOREPO_DISPATCH_TOKEN || secrets.GITHUB_TOKEN }}
+          repository: padalan/workspace-2026 # Placeholder, replace with actual user monorepo target if different
+          event-type: zcp-cli-updated
+          client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}", "actor": "${{ github.actor }}"}'

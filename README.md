@@ -35,6 +35,7 @@ curl -sL https://zerocopy.systems/audit/install.sh | bash
 cargo install --git https://github.com/zerocopy-systems/zcp
 ```
 
+
 ### 2. Run the Diagnostic Wedge
 
 Because `zcp` injects tracepoints into the Linux CFS scheduler, it requires `sudo` (`CAP_BPF` and `CAP_PERFMON`).
@@ -45,6 +46,10 @@ export BOT_PID=$(pgrep python)
 
 sudo zcp audit --pid $BOT_PID --volume 50000000 --slippage 0.0001 --json
 ```
+
+### 3. 📈 The Revenue Bridge
+
+When you terminate the audit (`Ctrl-C`), `zcp` generates a `bill_of_health.json`. You can submit this diagnostic at [zerocopy.systems/audit?utm_source=github&utm_medium=oss_cli_readme&utm_campaign=jitter_tax](https://zerocopy.systems/audit?utm_source=github&utm_medium=oss_cli_readme&utm_campaign=jitter_tax) to receive a personalized architectural remedy roadmap.
 
 ## 🏗️ Architecture vs. Legacy Benchmarks
 

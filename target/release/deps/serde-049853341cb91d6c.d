@@ -1,0 +1,14 @@
+/Users/nikhil/persona/git/WorkSpace-2026/cli/zcp/target/release/deps/serde-049853341cb91d6c.d: /Users/nikhil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/nikhil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/nikhil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/nikhil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/nikhil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/nikhil/persona/git/WorkSpace-2026/cli/zcp/target/release/build/serde-8d84e85383f8b2ae/out/private.rs
+
+/Users/nikhil/persona/git/WorkSpace-2026/cli/zcp/target/release/deps/libserde-049853341cb91d6c.rlib: /Users/nikhil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/nikhil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/nikhil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/nikhil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/nikhil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/nikhil/persona/git/WorkSpace-2026/cli/zcp/target/release/build/serde-8d84e85383f8b2ae/out/private.rs
+
+/Users/nikhil/persona/git/WorkSpace-2026/cli/zcp/target/release/deps/libserde-049853341cb91d6c.rmeta: /Users/nikhil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/nikhil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/nikhil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/nikhil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/nikhil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/nikhil/persona/git/WorkSpace-2026/cli/zcp/target/release/build/serde-8d84e85383f8b2ae/out/private.rs
+
+/Users/nikhil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs:
+/Users/nikhil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs:
+/Users/nikhil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs:
+/Users/nikhil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs:
+/Users/nikhil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs:
+/Users/nikhil/persona/git/WorkSpace-2026/cli/zcp/target/release/build/serde-8d84e85383f8b2ae/out/private.rs:
+
+# env-dep:OUT_DIR=/Users/nikhil/persona/git/WorkSpace-2026/cli/zcp/target/release/build/serde-8d84e85383f8b2ae/out
