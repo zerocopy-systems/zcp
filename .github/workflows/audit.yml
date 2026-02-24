@@ -39,7 +39,7 @@ jobs:
 
     - name: Build eBPF Bytecode
       run: cargo +nightly build --release -Z build-std=core --target bpfel-unknown-none
-      working-directory: zerocopy-audit-ebpf || true
+      working-directory: zerocopy-audit-ebpf
 
     - name: Test Aggregation Engine
       run: cargo +nightly test --verbose
