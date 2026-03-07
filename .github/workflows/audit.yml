@@ -16,7 +16,7 @@ jobs:
     name: Build & Test (Linux CO-RE)
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     
     - name: Install Rust Nightly (for eBPF)
       uses: dtolnay/rust-toolchain@nightly
